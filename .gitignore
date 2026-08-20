@@ -1,1 +1,10 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+*.map
+.DS_Store
 implementation_plan.md
+task.md

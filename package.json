@@ -1,0 +1,11 @@
+{
+  "name": "f1-fans-new-tab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "validate": "node scripts/validate.mjs",
+    "test": "node --test test/unit/*.test.mjs"
+  }
+}

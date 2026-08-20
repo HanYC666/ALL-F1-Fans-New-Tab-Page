@@ -1,0 +1,13 @@
+[
+  { "id": "all", "label": "All teams", "accent": "#e10600" },
+  { "id": "red-bull", "label": "Red Bull Racing", "accent": "#1e41ff" },
+  { "id": "ferrari", "label": "Ferrari", "accent": "#e80020" },
+  { "id": "mclaren", "label": "McLaren", "accent": "#ff8700" },
+  { "id": "mercedes", "label": "Mercedes", "accent": "#00a19c" },
+  { "id": "aston-martin", "label": "Aston Martin", "accent": "#229971" },
+  { "id": "alpine", "label": "Alpine", "accent": "#2293d1" },
+  { "id": "williams", "label": "Williams", "accent": "#64c4ff" },
+  { "id": "haas", "label": "Haas", "accent": "#b6babd" },
+  { "id": "sauber", "label": "Audi", "accent": "#52e252" },
+  { "id": "rb", "label": "Racing Bulls", "accent": "#6692ff" }
+]

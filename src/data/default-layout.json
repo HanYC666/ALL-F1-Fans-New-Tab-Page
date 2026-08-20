@@ -1,0 +1,42 @@
+{
+  "locked": false,
+  "density": "comfortable",
+  "widgets": {
+    "raceWeekend": {
+      "visible": true,
+      "x": 1,
+      "y": 1,
+      "w": 4,
+      "h": 3,
+      "opacity": 0.78,
+      "blurPx": 18
+    },
+    "standings": {
+      "visible": true,
+      "x": 1,
+      "y": 5,
+      "w": 5,
+      "h": 4,
+      "opacity": 0.78,
+      "blurPx": 18
+    },
+    "streams": {
+      "visible": true,
+      "x": 8,
+      "y": 5,
+      "w": 4,
+      "h": 4,
+      "opacity": 0.78,
+      "blurPx": 18
+    },
+    "shortcuts": {
+      "visible": true,
+      "x": 8,
+      "y": 1,
+      "w": 4,
+      "h": 3,
+      "opacity": 0.78,
+      "blurPx": 18
+    }
+  }
+}

@@ -1,0 +1,14 @@
+:root {
+  --page-accent: #e10600;
+  --panel-opacity: .72;
+  --panel-blur: 18px;
+  --panel-radius: 18px;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --panel-bg: 10 15 25;
+  --panel-border: rgb(255 255 255 / 18%);
+  --shadow: 0 16px 48px rgb(0 0 0 / 25%);
+  --gap: 16px;
+  --focus: 0 0 0 3px rgb(255 255 255 / 35%),0 0 0 5px var(--page-accent);
+}

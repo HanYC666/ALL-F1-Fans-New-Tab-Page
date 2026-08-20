@@ -1,0 +1,33 @@
+#settings-panel {
+  position: fixed;
+  z-index: 5;
+  right: 20px;
+  top: 72px;
+  width: min(430px,calc(100vw - 40px));
+  max-height: calc(100vh - 92px);
+  overflow: auto;
+  background: rgb(8 13 24 / .94);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(22px);
+  padding: 18px;
+}
+#settings-panel[hidden] {
+  display: none;
+}
+@media (max-width:620px) {
+  #settings-panel {
+    right: 10px;
+    top: 66px;
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 76px);
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  * {
+    scroll-behavior: auto!important;
+    transition: none!important;
+    animation: none!important;
+  }
+}

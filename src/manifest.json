@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "F1 Fans New Tab",
+  "version": "0.1.0",
+  "description": "A customizable F1 dashboard for Chrome's New Tab page.",
+  "chrome_url_overrides": { "newtab": "newtab.html" },
+  "permissions": ["storage"],
+  "action": { "default_title": "F1 Fans settings" },
+  "icons": {
+    "16": "icons/icon-16.svg",
+    "48": "icons/icon-48.svg",
+    "128": "icons/icon-128.svg"
+  }
+}
