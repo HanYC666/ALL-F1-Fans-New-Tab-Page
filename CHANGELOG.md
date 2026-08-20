@@ -6,7 +6,7 @@ Format:
 - ###Fixed (if applicable)
 - ###Removed (if applicable)
 
-## 2026-08-21
+## 0.1.0 - 2026-08-21
 
 ### Added
 
@@ -31,7 +31,7 @@ Format:
 
 -----
 
-## 0.1.0 — 2026-08-18
+## 0.0.2 — 2026-08-18
 
 This is the first working version of the extension. The repository started as notes and a plan; this release contains the actual extension source, build scripts, and tests.
 
