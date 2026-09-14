@@ -27,7 +27,8 @@
   --hypr-active-border: linear-gradient(135deg, var(--page-accent), rgba(255, 255, 255, 0.4));
   --hypr-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
 
-  /* Panel Surface & Text */
+  /* Obsidian Dark Mode Surface & Text */
+  --bg-color: #060911;
   --panel-bg-rgb: 10, 14, 24;
   --panel-bg: rgba(var(--panel-bg-rgb), var(--hypr-opacity));
   --text-primary: #f8fafc;
@@ -48,4 +49,17 @@
   --focus-ring: 0 0 0 2px rgba(10, 14, 24, 0.9), 0 0 0 4px var(--page-accent);
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Racing Light Mode */
+[data-theme="light"] {
+  --bg-color: #f1f5f9;
+  --panel-bg-rgb: 255, 255, 255;
+  --panel-bg: rgba(var(--panel-bg-rgb), var(--hypr-opacity));
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --hypr-border-color: rgba(0, 0, 0, 0.12);
+  --hypr-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --focus-ring: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 0 0 4px var(--page-accent);
 }
