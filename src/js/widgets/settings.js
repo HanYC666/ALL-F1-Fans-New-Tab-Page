@@ -14,16 +14,16 @@ export function renderSettings(
   const backdrop = document.querySelector("#settings-backdrop");
   panel.replaceChildren();
 
-  const closeSettings = async () => {
+  const closeSettings = () => {
     panel.hidden = true;
     backdrop.hidden = true;
     document.querySelector("#settings-button").setAttribute("aria-expanded", "false");
-    await onChange();
+    onChange();
   };
 
   backdrop.onclick = closeSettings;
 
-  // Header: Only one emoji here as requested by user
+  // Header: Only one emoji here on the top title as requested by user
   const header = document.createElement("div");
   header.className = "settings-header";
 
@@ -67,6 +67,34 @@ export function renderSettings(
       const grid = document.createElement("div");
       grid.className = "settings-grid";
 
+      // Color Scheme (Dark / Light)
+      const themeModeRow = document.createElement("div");
+      themeModeRow.className = "setting-row";
+      themeModeRow.innerHTML = `
+        <div class="setting-info">
+          <span class="setting-label">Appearance Mode</span>
+          <span class="setting-desc">Switch between Obsidian Dark and Racing Light modes</span>
+        </div>
+      `;
+      const themeSelect = document.createElement("select");
+      themeSelect.className = "setting-select";
+      [
+        { id: "dark", label: "Obsidian Dark" },
+        { id: "light", label: "Racing Light" },
+      ].forEach((m) => {
+        const o = document.createElement("option");
+        o.value = m.id;
+        o.textContent = m.label;
+        if ((state.theme.colorScheme || "dark") === m.id) o.selected = true;
+        themeSelect.append(o);
+      });
+      themeSelect.addEventListener("change", () => {
+        state.theme.colorScheme = themeSelect.value;
+        onChange();
+      });
+      themeModeRow.append(themeSelect);
+      grid.append(themeModeRow);
+
       // Opacity Slider (Live CSS variable update)
       grid.append(createSliderRow(
         "Tile Acrylic Opacity",
@@ -79,7 +107,6 @@ export function renderSettings(
         (v) => {
           const val = v / 100;
           state.theme.panelOpacity = val;
-          document.documentElement.style.setProperty("--hypr-opacity", val);
           onChange();
         }
       ));
@@ -95,7 +122,6 @@ export function renderSettings(
         "px",
         (v) => {
           state.theme.panelBlurPx = v;
-          document.documentElement.style.setProperty("--hypr-blur", `${v}px`);
           onChange();
         }
       ));
@@ -111,7 +137,6 @@ export function renderSettings(
         "px",
         (v) => {
           state.theme.panelRadiusPx = v;
-          document.documentElement.style.setProperty("--hypr-radius", `${v}px`);
           onChange();
         }
       ));
@@ -127,8 +152,6 @@ export function renderSettings(
         "px",
         (v) => {
           state.theme.gridGapPx = v;
-          const wg = document.querySelector("#widget-grid");
-          if (wg) wg.style.setProperty("--hypr-gap", `${v}px`);
           onChange();
         }
       ));
@@ -148,13 +171,6 @@ export function renderSettings(
       colorInput.style.cssText = "width: 44px; height: 32px; border-radius: 6px; cursor: pointer;";
       colorInput.addEventListener("input", () => {
         state.theme.accentColor = colorInput.value;
-        document.documentElement.style.setProperty("--page-accent", colorInput.value);
-        if (/^#[\da-f]{6}$/i.test(colorInput.value)) {
-          const r = parseInt(colorInput.value.slice(1, 3), 16);
-          const g = parseInt(colorInput.value.slice(3, 5), 16);
-          const b = parseInt(colorInput.value.slice(5, 7), 16);
-          document.documentElement.style.setProperty("--page-accent-rgb", `${r}, ${g}, ${b}`);
-        }
         onChange();
       });
       teamRow.append(colorInput);
@@ -302,7 +318,7 @@ export function renderSettings(
       const dropzone = document.createElement("div");
       dropzone.className = "upload-dropzone";
       dropzone.innerHTML = `
-        <strong style="color: #fff;">Click or Drag & Drop Images Here</strong>
+        <strong style="color: var(--text-primary);">Click or Drag & Drop Images Here</strong>
         <span class="muted">Supports PNG, JPG, WebP up to 12MB. Stored locally in browser.</span>
         <input type="file" accept="image/*" style="display:none;" />
       `;

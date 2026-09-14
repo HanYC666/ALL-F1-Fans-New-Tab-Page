@@ -3,6 +3,7 @@ import { clamp, CONFIG, safeHex } from "./config.js";
 export const DEFAULT_STATE = {
   schemaVersion: CONFIG.schemaVersion,
   theme: {
+    colorScheme: "dark",
     teamFilter: "all",
     backgroundMode: "random-new-tab",
     backgroundIntervalSeconds: 30,
@@ -139,6 +140,9 @@ export function sanitizeState(input = {}) {
   s.schemaVersion = CONFIG.schemaVersion;
   const t = input.theme || {};
   Object.assign(s.theme, t);
+
+  s.theme.colorScheme = ["dark", "light"].includes(t.colorScheme) ? t.colorScheme : "dark";
+
   s.theme.overlayOpacity = clamp(
     t.overlayOpacity ?? DEFAULT_STATE.theme.overlayOpacity,
     0.2,
