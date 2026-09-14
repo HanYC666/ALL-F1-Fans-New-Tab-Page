@@ -97,6 +97,21 @@ export function renderSettings(
       themeModeRow.append(themeSelect);
       grid.append(themeModeRow);
 
+      // Background Shade / Tint Strength Slider
+      grid.append(createSliderRow(
+        "Background Shade Strength",
+        "Control dark/light overlay tint on wallpaper (0% for raw vivid image)",
+        Math.round((state.theme.overlayOpacity ?? 0.45) * 100),
+        0,
+        100,
+        1,
+        "%",
+        (v) => {
+          state.theme.overlayOpacity = v / 100;
+          onChange();
+        }
+      ));
+
       // Opacity Slider (Live CSS variable update)
       grid.append(createSliderRow(
         "Tile Acrylic Opacity",
@@ -525,6 +540,21 @@ export function renderSettings(
           "s",
           (v) => {
             state.theme.backgroundIntervalSeconds = v;
+            onChange();
+          }
+        ));
+
+        // Background Shade / Tint Strength
+        grid.append(createSliderRow(
+          "Background Shade Strength",
+          "Control dark/light overlay tint on wallpaper (0% for raw vivid image)",
+          Math.round((state.theme.overlayOpacity ?? 0.45) * 100),
+          0,
+          100,
+          1,
+          "%",
+          (v) => {
+            state.theme.overlayOpacity = v / 100;
             onChange();
           }
         ));

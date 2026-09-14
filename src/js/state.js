@@ -146,7 +146,7 @@ export function sanitizeState(input = {}) {
 
   s.theme.overlayOpacity = clamp(
     t.overlayOpacity ?? DEFAULT_STATE.theme.overlayOpacity,
-    0.2,
+    0,
     1,
   );
   s.theme.panelOpacity = clamp(

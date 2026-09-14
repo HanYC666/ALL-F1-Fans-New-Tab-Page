@@ -16,6 +16,7 @@
   --page-accent: var(--team-all);
   --page-accent-rgb: 225, 6, 0;
   --page-accent-glow: rgba(var(--page-accent-rgb), 0.35);
+  --bg-overlay-opacity: 0.45;
 
   /* Hyprland Glass & Tiling Controls */
   --hypr-opacity: 0.72;

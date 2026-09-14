@@ -40,6 +40,10 @@ function applyCssTokens() {
     "--page-accent",
     state.theme.accentColor || "#e10600",
   );
+  document.documentElement.style.setProperty(
+    "--bg-overlay-opacity",
+    state.theme.overlayOpacity ?? 0.45,
+  );
 
   const wg = document.querySelector("#widget-grid");
   if (wg && state.theme.gridGapPx !== undefined) {

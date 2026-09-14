@@ -8,8 +8,7 @@
 }
 
 /* Dynamic Background Layers */
-#background-layer,
-#background-scrim {
+#background-layer {
   position: fixed;
   inset: 0;
   z-index: -2;
@@ -20,17 +19,19 @@
 }
 
 #background-scrim {
+  position: fixed;
+  inset: 0;
   z-index: -1;
-  background: radial-gradient(circle at 50% 0%, rgba(var(--page-accent-rgb), 0.15), transparent 45%),
-              linear-gradient(180deg, rgba(6, 9, 17, 0.45) 0%, rgba(6, 9, 17, 0.85) 100%);
-  backdrop-filter: brightness(0.95);
+  opacity: var(--bg-overlay-opacity, 0.45);
+  background: radial-gradient(circle at 50% 0%, rgba(var(--page-accent-rgb), 0.2), transparent 55%),
+              linear-gradient(180deg, rgba(6, 9, 17, 0.35) 0%, rgba(6, 9, 17, 0.85) 100%);
   pointer-events: none;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
 }
 
 [data-theme="light"] #background-scrim {
-  background: radial-gradient(circle at 50% 0%, rgba(var(--page-accent-rgb), 0.15), transparent 50%),
-              linear-gradient(180deg, rgba(248, 250, 252, 0.65) 0%, rgba(241, 245, 249, 0.92) 100%);
-  backdrop-filter: brightness(1.02);
+  background: radial-gradient(circle at 50% 0%, rgba(var(--page-accent-rgb), 0.15), transparent 55%),
+              linear-gradient(180deg, rgba(248, 250, 252, 0.4) 0%, rgba(241, 245, 249, 0.85) 100%);
 }
 
 /* ==========================================================================
