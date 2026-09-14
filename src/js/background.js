@@ -12,13 +12,13 @@ export async function eligibleImages(state) {
   const disabled = new Set(state.theme.disabledBackgrounds || []);
 
   const built = backgrounds.filter((x) =>
-    (selected === "all" || x.team === selected || x.team === "all") &&
+    (selected === "all" ? true : x.team === selected) &&
     x.enabled !== false &&
     !disabled.has(x.id)
   );
 
   const local = uploads.filter((x) =>
-    x.enabled !== false && (selected === "all" || x.team === selected || x.team === "all")
+    x.enabled !== false && (selected === "all" ? true : x.team === selected)
   ).map((x) => {
     const url = URL.createObjectURL(x.blob);
     urls.push(url);
@@ -44,20 +44,32 @@ export async function applyBackground(state) {
   if (!pool.length) return;
 
   let index = 0;
-  if (state.theme.backgroundMode === "sequential-new-tab") {
+  const lastIndex = pool.findIndex((x) => x.id === state.cache.lastBackground);
+
+  if (state._explicitBackground && lastIndex >= 0) {
+    index = lastIndex;
+    state._explicitBackground = false;
+  } else if (state.theme.backgroundMode === "static") {
+    index = lastIndex >= 0 ? lastIndex : 0;
+    state.cache.lastBackground = pool[index].id;
+  } else if (state.theme.backgroundMode === "sequential-new-tab") {
     index = (Number.isInteger(Number(state.cache.f1BackgroundIndex))
       ? Number(state.cache.f1BackgroundIndex) + 1
       : 0) % pool.length;
     state.cache.f1BackgroundIndex = index;
+    state.cache.lastBackground = pool[index].id;
   } else if (state.theme.backgroundMode === "random-new-tab") {
-    const choices = pool.filter((x) => x.id !== state.cache.lastBackground);
-    const source = choices.length ? choices : pool;
-    const chosen = source[Math.floor(Math.random() * source.length)];
-    index = pool.findIndex((x) => x.id === chosen.id);
-    state.cache.lastBackground = chosen?.id || pool[0].id;
-  } else if (state.theme.backgroundMode === "static") {
-    const foundIdx = pool.findIndex((x) => x.id === state.cache.lastBackground);
-    index = foundIdx >= 0 ? foundIdx : 0;
+    if (pool.length > 1 && lastIndex >= 0) {
+      const choices = pool.filter((x) => x.id !== state.cache.lastBackground);
+      const chosen = choices[Math.floor(Math.random() * choices.length)];
+      index = pool.findIndex((x) => x.id === chosen.id);
+    } else {
+      index = lastIndex >= 0 ? lastIndex : Math.floor(Math.random() * pool.length);
+    }
+    state.cache.lastBackground = pool[index].id;
+  } else {
+    index = lastIndex >= 0 ? lastIndex : 0;
+    state.cache.lastBackground = pool[index].id;
   }
 
   const chosenItem = pool[index] || pool[0];

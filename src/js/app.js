@@ -141,6 +141,7 @@ function renderTeamPills() {
     btn.addEventListener("click", () => {
       state.theme.teamFilter = t.id;
       state.theme.accentColor = t.accent;
+      state.cache.lastBackground = null;
       save();
       applyCssTokens();
       applyBackground(state);

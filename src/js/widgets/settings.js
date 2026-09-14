@@ -248,6 +248,7 @@ export function renderSettings(
         setTeamBtn.addEventListener("click", () => {
           state.theme.teamFilter = currentTeam.id;
           state.theme.accentColor = currentTeam.accent;
+          state.cache.lastBackground = null;
           onChange();
           renderTabContent();
         });
@@ -310,6 +311,7 @@ export function renderSettings(
               state.theme.teamFilter = currentTeam.id;
               state.theme.accentColor = currentTeam.accent;
               state.cache.lastBackground = bg.id;
+              state._explicitBackground = true;
               onChange();
               renderTabContent();
             });
@@ -347,6 +349,7 @@ export function renderSettings(
               state.theme.teamFilter = currentTeam.id;
               state.theme.accentColor = currentTeam.accent;
               state.cache.lastBackground = img.id;
+              state._explicitBackground = true;
               onChange();
               renderTabContent();
             });
@@ -474,6 +477,7 @@ export function renderSettings(
           state.theme.teamFilter = teamSel.value;
           const matched = teams.find((x) => x.id === teamSel.value);
           if (matched) state.theme.accentColor = matched.accent;
+          state.cache.lastBackground = null;
           onChange();
           renderTabContent();
         });
@@ -582,6 +586,10 @@ export function renderSettings(
 
           card.addEventListener("click", () => {
             selectedTeamGalleryId = t.id;
+            state.theme.teamFilter = t.id;
+            state.theme.accentColor = t.accent;
+            state.cache.lastBackground = null;
+            onChange();
             renderTabContent();
           });
 
