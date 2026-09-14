@@ -1,11 +1,43 @@
 import { createWidget } from "./widget-registry.js";
 import { countdown, formatDate, formatTimeOnly } from "../providers/provider-utils.js";
 
+export function getCurrentGrandPrix(schedule = []) {
+  if (!Array.isArray(schedule) || !schedule.length) return null;
+  const now = Date.now();
+  const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+
+  // 1. Check if any race has lights out within 12 hours (or up to 4h after start)
+  const activeRace = schedule.find((r) => {
+    if (!r.startsAt) return false;
+    const t = new Date(r.startsAt).getTime();
+    return t - now <= TWELVE_HOURS && now - t <= 4 * 3600 * 1000;
+  });
+  if (activeRace) return activeRace;
+
+  // 2. Next upcoming race
+  const upcomingRace = schedule.find((r) => {
+    if (!r.startsAt) return false;
+    const t = new Date(r.startsAt).getTime();
+    return t > now;
+  });
+  if (upcomingRace) return upcomingRace;
+
+  // 3. Past 1 Grand Prix (most recent past race)
+  const pastRaces = schedule.filter((r) => {
+    if (!r.startsAt) return false;
+    return new Date(r.startsAt).getTime() <= now;
+  });
+  if (pastRaces.length) {
+    return pastRaces[pastRaces.length - 1];
+  }
+
+  return schedule[0];
+}
+
 export function renderRaceWeekend(state, data = {}) {
   const body = document.createElement("div");
 
-  const race = data.schedule?.find((x) => new Date(x.startsAt) >= Date.now() - 7200000) ||
-    data.schedule?.[0];
+  const race = getCurrentGrandPrix(data.schedule);
 
   if (!race) {
     const p = document.createElement("p");
@@ -26,7 +58,7 @@ export function renderRaceWeekend(state, data = {}) {
 
   const roundBadge = document.createElement("span");
   roundBadge.className = "status-pill";
-  roundBadge.textContent = race.round ? `ROUND ${race.round}` : "NEXT GP";
+  roundBadge.textContent = race.round ? `ROUND ${race.round}` : "ACTIVE GP";
 
   const name = document.createElement("h3");
   name.textContent = race.meetingName;
@@ -43,13 +75,25 @@ export function renderRaceWeekend(state, data = {}) {
 
   const countLabel = document.createElement("span");
   countLabel.className = "countdown-label";
-  countLabel.textContent = "LIGHTS OUT IN";
+
+  const now = Date.now();
+  const raceTime = race.startsAt ? new Date(race.startsAt).getTime() : 0;
+  const isRaceActive = raceTime <= now && now - raceTime <= 4 * 3600 * 1000;
+  const isPast = raceTime && raceTime < now && !isRaceActive;
+
+  if (isRaceActive) {
+    countLabel.textContent = "GRAND PRIX";
+  } else if (isPast) {
+    countLabel.textContent = "RACE FINISHED";
+  } else {
+    countLabel.textContent = "LIGHTS OUT IN";
+  }
 
   const countDigits = document.createElement("span");
   countDigits.className = "countdown-digits";
   countDigits.id = "race-countdown-timer";
   countDigits.dataset.targetTime = race.startsAt;
-  countDigits.textContent = countdown(race.startsAt);
+  countDigits.textContent = isRaceActive ? "LIVE RACING" : countdown(race.startsAt);
 
   countdownBox.append(countLabel, countDigits);
   hero.append(meta, countdownBox);
@@ -66,19 +110,18 @@ export function renderRaceWeekend(state, data = {}) {
       { name: "Grand Prix Race", short: "RAC", startsAt: race.startsAt },
     ];
 
-  const now = Date.now();
   let nextFound = false;
 
   sessions.forEach((s) => {
     if (!s.startsAt) return;
     const sTime = new Date(s.startsAt).getTime();
-    const isPast = sTime + 7200000 < now;
-    const isLive = sTime <= now && sTime + 7200000 >= now;
-    const isNext = !isPast && !isLive && !nextFound;
-    if (isNext || isLive) nextFound = true;
+    const isSessionPast = sTime + 7200000 < now;
+    const isSessionLive = sTime <= now && sTime + 7200000 >= now;
+    const isNext = !isSessionPast && !isSessionLive && !nextFound;
+    if (isNext || isSessionLive) nextFound = true;
 
     const row = document.createElement("div");
-    row.className = `session-item ${isLive ? "active" : ""} ${isPast ? "done" : ""}`;
+    row.className = `session-item ${isSessionLive ? "active" : ""} ${isSessionPast ? "done" : ""}`;
 
     const group = document.createElement("div");
     group.className = "session-name-group";
@@ -95,9 +138,9 @@ export function renderRaceWeekend(state, data = {}) {
     const timeCol = document.createElement("div");
     timeCol.className = "session-time";
 
-    if (isLive) {
+    if (isSessionLive) {
       timeCol.innerHTML = `<span class="status-pill green"><span class="status-dot"></span> LIVE</span>`;
-    } else if (isPast) {
+    } else if (isSessionPast) {
       timeCol.innerHTML = `<span class="muted">Finished</span>`;
     } else {
       timeCol.textContent = formatDate(s.startsAt, state.preferences.timezone);
@@ -113,8 +156,8 @@ export function renderRaceWeekend(state, data = {}) {
   const source = document.createElement("div");
   source.className = "source-footer";
   source.innerHTML = `
-    <span>Source: ${data.provider || "jolpica"}</span>
-    <span>${data.stale ? "⚠️ CACHED" : data.fetchedAt ? "🟢 Live" : ""}</span>
+    <span>Schedule: ${data.provider || "jolpica"}</span>
+    <span>${data.stale ? "⚠️ CACHED" : data.fetchedAt ? "🟢 Live Telemetry" : ""}</span>
   `;
   body.append(source);
 

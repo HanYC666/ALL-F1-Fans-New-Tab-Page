@@ -18,7 +18,7 @@
   --page-accent-glow: rgba(var(--page-accent-rgb), 0.35);
 
   /* Hyprland Glass & Tiling Controls */
-  --hypr-opacity: 0.75;
+  --hypr-opacity: 0.72;
   --hypr-blur: 20px;
   --hypr-radius: 16px;
   --hypr-gap: 16px;

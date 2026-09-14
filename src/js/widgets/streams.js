@@ -14,7 +14,6 @@ export function renderStreams(
   {
     results = [],
     loading = false,
-    error = null,
     grandPrix = "Formula 1",
     onRefresh = () => {},
   } = {},
@@ -44,17 +43,10 @@ export function renderStreams(
     select.append(o);
   });
 
-  const findBtn = document.createElement("button");
-  findBtn.type = "button";
-  findBtn.className = "widget-btn";
-  findBtn.textContent = loading ? "Searching…" : "↻ Check";
-  findBtn.disabled = loading;
-  findBtn.addEventListener("click", () => onRefresh(select.value));
-
-  selectorBar.append(select, findBtn);
+  selectorBar.append(select);
   hub.append(selectorBar);
 
-  // Hero YouTube Direct Search Button
+  // Hero YouTube Direct Search Button (Styled with Theme Color)
   const directLink = document.createElement("a");
   directLink.className = "youtube-hero-btn";
   directLink.target = "_blank";
@@ -74,7 +66,7 @@ export function renderStreams(
   // Curated Channels Quick Links
   const curTitle = document.createElement("p");
   curTitle.className = "muted";
-  curTitle.textContent = "Quick Stream & Commentary Channels:";
+  curTitle.textContent = "Featured Fan & Official Watchalongs:";
   hub.append(curTitle);
 
   const channelRow = document.createElement("div");
@@ -105,7 +97,7 @@ export function renderStreams(
       a.rel = "noopener noreferrer";
       a.innerHTML = `
         <span class="widget-icon">▶</span>
-        <span class="team-color-bar" style="background:#ff0000; box-shadow:0 0 8px #f00;"></span>
+        <span class="team-color-bar" style="background:var(--page-accent); box-shadow:0 0 8px var(--page-accent);"></span>
         <div class="driver-info">
           <span class="driver-name">${x.title}</span>
           <span class="team-name">${x.channelTitle || "YouTube"} · ${x.verifiedByAllowlist ? "Verified" : "Stream"}</span>
@@ -119,11 +111,12 @@ export function renderStreams(
 
   body.append(hub);
 
+  // Clean, meaningful status line
   const source = document.createElement("div");
   source.className = "source-footer";
   source.innerHTML = `
-    <span>Legal fan & official commentary discovery</span>
-    <span>No API key required</span>
+    <span>Active: ${grandPrix}</span>
+    <span>Direct YouTube search · 0 API keys</span>
   `;
   body.append(source);
 

@@ -6,7 +6,7 @@ import { initSearch } from "./search.js";
 import { announce, prefersReducedMotion } from "./accessibility.js";
 import { jolpica } from "./providers/jolpica.js";
 import { renderShortcuts } from "./widgets/shortcuts.js";
-import { renderRaceWeekend } from "./widgets/race-weekend.js";
+import { renderRaceWeekend, getCurrentGrandPrix } from "./widgets/race-weekend.js";
 import { renderStandings } from "./widgets/standings.js";
 import { renderStreams } from "./widgets/streams.js";
 import { renderSettings } from "./widgets/settings.js";
@@ -37,6 +37,20 @@ function applyCssTokens() {
     "--page-accent",
     state.theme.accentColor || "#e10600",
   );
+
+  const wg = document.querySelector("#widget-grid");
+  if (wg && state.theme.gridGapPx !== undefined) {
+    wg.style.setProperty("--hypr-gap", `${state.theme.gridGapPx}px`);
+  }
+
+  // Hex to RGB for glow variables
+  const activeAccent = state.theme.accentColor || "#e10600";
+  if (/^#[\da-f]{6}$/i.test(activeAccent)) {
+    const r = parseInt(activeAccent.slice(1, 3), 16);
+    const g = parseInt(activeAccent.slice(3, 5), 16);
+    const b = parseInt(activeAccent.slice(5, 7), 16);
+    document.documentElement.style.setProperty("--page-accent-rgb", `${r}, ${g}, ${b}`);
+  }
 }
 
 function initClock() {
@@ -63,9 +77,43 @@ function initCountdownTicker() {
   setInterval(() => {
     const el = document.querySelector("#race-countdown-timer");
     if (el && el.dataset.targetTime) {
-      el.textContent = countdown(el.dataset.targetTime);
+      const now = Date.now();
+      const target = new Date(el.dataset.targetTime).getTime();
+      if (target <= now && now - target <= 4 * 3600 * 1000) {
+        el.textContent = "LIVE RACING";
+      } else {
+        el.textContent = countdown(el.dataset.targetTime);
+      }
     }
   }, 1000);
+}
+
+function updateTrackStatus(telemetry) {
+  const pill = document.querySelector("#track-status-pill");
+  const text = document.querySelector("#track-status-text");
+  if (!pill || !text) return;
+
+  const currentGp = getCurrentGrandPrix(telemetry.schedule);
+  if (!currentGp || !currentGp.startsAt) {
+    pill.className = "status-pill green";
+    text.textContent = "TRACK GREEN";
+    return;
+  }
+
+  const now = Date.now();
+  const raceTime = new Date(currentGp.startsAt).getTime();
+  const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+
+  if (raceTime <= now && now - raceTime <= 4 * 3600 * 1000) {
+    pill.className = "status-pill green";
+    text.textContent = `LIVE: ${currentGp.meetingName.toUpperCase()}`;
+  } else if (raceTime > now && raceTime - now <= TWELVE_HOURS) {
+    pill.className = "status-pill yellow";
+    text.textContent = `LIGHTS OUT SOON: ${currentGp.meetingName.toUpperCase()}`;
+  } else {
+    pill.className = "status-pill green";
+    text.textContent = `TRACK GREEN · ${currentGp.meetingName.toUpperCase()}`;
+  }
 }
 
 function renderTeamPills() {
@@ -95,13 +143,15 @@ function renderTeamPills() {
 }
 
 function rerender() {
+  const currentGp = getCurrentGrandPrix(data.schedule);
+  const gpName = currentGp?.meetingName || "Formula 1";
+
   grid().replaceChildren(
     renderRaceWeekend(state, data),
     renderStandings(state, data),
     renderStreams(state, {
       ...streams,
-      grandPrix: data.schedule?.[0]?.meetingName || "Formula 1",
-      onRefresh: findStreams,
+      grandPrix: gpName,
     }),
     renderShortcuts(state, () => {
       save();
@@ -115,6 +165,7 @@ function rerender() {
     applyLayout(state);
   });
   applyCssTokens();
+  updateTrackStatus(data);
 }
 
 async function save() {
@@ -136,6 +187,7 @@ async function refreshData() {
       ...standings,
       ...constr,
       provider: "jolpica",
+      fetchedAt: new Date().toISOString(),
     };
 
     state.cache.schedule = { ...schedule, expiresAt: Date.now() + 1800000 };
@@ -143,6 +195,8 @@ async function refreshData() {
     state.cache.constructors = { ...constr, expiresAt: Date.now() + 1800000 };
 
     await save();
+    updateTrackStatus(data);
+    rerender();
     announce(`F1 telemetry synced from Jolpica at ${new Date().toLocaleTimeString()}.`);
   } catch (error) {
     const cachedSchedule = state.cache.schedule;
@@ -157,48 +211,10 @@ async function refreshData() {
       stale: true,
       error: error.message,
     };
+    updateTrackStatus(data);
+    rerender();
     announce("F1 telemetry is offline; showing cached data.");
   }
-  rerender();
-}
-
-async function findStreams(session = "Race commentary") {
-  const url = CONFIG.youtubeProxyUrl;
-  if (!url || url.includes("==")) {
-    streams = {
-      results: [],
-      error: "Proxy is optional. Direct search links above work instantly without credentials.",
-    };
-    rerender();
-    return;
-  }
-  streams = { ...streams, loading: true, error: null };
-  rerender();
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        season: CONFIG.season,
-        grandPrix: data.schedule?.[0]?.meetingName || "Formula 1",
-        session,
-        language: state.preferences.language,
-      }),
-    });
-    if (!res.ok) throw new Error(`Proxy error ${res.status}`);
-    const payload = await res.json();
-    streams = {
-      results: Array.isArray(payload.results) ? payload.results : [],
-      loading: false,
-    };
-  } catch (e) {
-    streams = {
-      results: [],
-      loading: false,
-      error: navigator.onLine ? "Search unavailable right now." : "Offline.",
-    };
-  }
-  rerender();
 }
 
 function exportSettings() {
@@ -261,6 +277,7 @@ async function reset(kind) {
 function openSettings() {
   renderSettings(state, {
     onChange: async () => {
+      applyCssTokens();
       await save();
       rerender();
       await applyBackground(state);
@@ -309,24 +326,25 @@ async function init() {
 
   window.addEventListener("beforeunload", cleanupBackgroundUrls);
 
-  await applyBackground(state);
-  applyCssTokens();
-  rerender();
-
-  const cacheOk = state.cache.schedule && state.cache.standings &&
-    state.cache.schedule.expiresAt > Date.now();
-
-  if (cacheOk) {
+  // Load from cache immediately if available
+  if (state.cache.schedule?.schedule?.length) {
     data = {
       ...state.cache.schedule,
       ...state.cache.standings,
       ...state.cache.constructors,
       provider: "jolpica",
     };
-  } else if (navigator.onLine) {
+  }
+
+  await applyBackground(state);
+  applyCssTokens();
+  rerender();
+
+  // Always fetch latest data when online
+  if (navigator.onLine) {
     refreshData();
   } else {
-    announce("Offline mode: showing local telemetry shell.");
+    announce("Offline mode: showing cached telemetry.");
   }
 }
 

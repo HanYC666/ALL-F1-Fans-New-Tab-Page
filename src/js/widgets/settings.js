@@ -14,20 +14,21 @@ export function renderSettings(
   const backdrop = document.querySelector("#settings-backdrop");
   panel.replaceChildren();
 
-  const closeSettings = () => {
+  const closeSettings = async () => {
     panel.hidden = true;
     backdrop.hidden = true;
     document.querySelector("#settings-button").setAttribute("aria-expanded", "false");
+    await onChange();
   };
 
   backdrop.onclick = closeSettings;
 
-  // Header
+  // Header: Only one emoji here as requested by user
   const header = document.createElement("div");
   header.className = "settings-header";
 
   const h2 = document.createElement("h2");
-  h2.innerHTML = `<span>⚙</span> <span>Hyprland Control Center</span>`;
+  h2.innerHTML = `<span>⚙</span> <span>Hyprland Settings</span>`;
 
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
@@ -39,15 +40,15 @@ export function renderSettings(
   header.append(h2, closeBtn);
   panel.append(header);
 
-  // Tab Navigation
+  // Tab Navigation (No extra emojis)
   const nav = document.createElement("nav");
   nav.className = "settings-nav";
 
   const tabs = [
-    { id: "hyprland", label: "🪟 Hyprland & Theme" },
-    { id: "wallpapers", label: "🖼️ Wallpapers & Gallery" },
-    { id: "general", label: "🏎️ F1 & General" },
-    { id: "backup", label: "💾 Backup & Reset" },
+    { id: "hyprland", label: "Hyprland & Theme" },
+    { id: "wallpapers", label: "Wallpapers & Gallery" },
+    { id: "general", label: "F1 & General" },
+    { id: "backup", label: "Backup & Reset" },
   ];
 
   const contentContainer = document.createElement("div");
@@ -66,22 +67,24 @@ export function renderSettings(
       const grid = document.createElement("div");
       grid.className = "settings-grid";
 
-      // Opacity
+      // Opacity Slider (Live CSS variable update)
       grid.append(createSliderRow(
         "Tile Acrylic Opacity",
         "Control translucency of widgets (20% to 100%)",
-        Math.round(state.theme.panelOpacity * 100),
+        Math.round((state.theme.panelOpacity ?? 0.72) * 100),
         20,
         100,
         1,
         "%",
         (v) => {
-          state.theme.panelOpacity = v / 100;
+          const val = v / 100;
+          state.theme.panelOpacity = val;
+          document.documentElement.style.setProperty("--hypr-opacity", val);
           onChange();
         }
       ));
 
-      // Blur
+      // Blur Slider (Live CSS variable update)
       grid.append(createSliderRow(
         "Backdrop Blur",
         "Frosted glass blur intensity",
@@ -92,11 +95,12 @@ export function renderSettings(
         "px",
         (v) => {
           state.theme.panelBlurPx = v;
+          document.documentElement.style.setProperty("--hypr-blur", `${v}px`);
           onChange();
         }
       ));
 
-      // Radius
+      // Radius Slider (Live CSS variable update)
       grid.append(createSliderRow(
         "Corner Rounding",
         "Border radius for all tiles and panels",
@@ -107,11 +111,12 @@ export function renderSettings(
         "px",
         (v) => {
           state.theme.panelRadiusPx = v;
+          document.documentElement.style.setProperty("--hypr-radius", `${v}px`);
           onChange();
         }
       ));
 
-      // Grid Gap
+      // Grid Gap Slider (Live CSS variable update)
       grid.append(createSliderRow(
         "Tiling Gap",
         "Spacing between dashboard widgets",
@@ -122,11 +127,13 @@ export function renderSettings(
         "px",
         (v) => {
           state.theme.gridGapPx = v;
+          const wg = document.querySelector("#widget-grid");
+          if (wg) wg.style.setProperty("--hypr-gap", `${v}px`);
           onChange();
         }
       ));
 
-      // Team Livery Color
+      // Team Livery Color Accent
       const teamRow = document.createElement("div");
       teamRow.className = "setting-row";
       teamRow.innerHTML = `
@@ -141,6 +148,13 @@ export function renderSettings(
       colorInput.style.cssText = "width: 44px; height: 32px; border-radius: 6px; cursor: pointer;";
       colorInput.addEventListener("input", () => {
         state.theme.accentColor = colorInput.value;
+        document.documentElement.style.setProperty("--page-accent", colorInput.value);
+        if (/^#[\da-f]{6}$/i.test(colorInput.value)) {
+          const r = parseInt(colorInput.value.slice(1, 3), 16);
+          const g = parseInt(colorInput.value.slice(3, 5), 16);
+          const b = parseInt(colorInput.value.slice(5, 7), 16);
+          document.documentElement.style.setProperty("--page-accent-rgb", `${r}, ${g}, ${b}`);
+        }
         onChange();
       });
       teamRow.append(colorInput);
@@ -282,15 +296,14 @@ export function renderSettings(
       // User Uploads & Dropzone
       const uploadTitle = document.createElement("div");
       uploadTitle.className = "settings-section-title";
-      uploadTitle.textContent = "Custom Image Uploads (Stored Locally in IndexedDB)";
+      uploadTitle.textContent = "Custom Image Uploads (IndexedDB)";
       contentContainer.append(uploadTitle);
 
       const dropzone = document.createElement("div");
       dropzone.className = "upload-dropzone";
       dropzone.innerHTML = `
-        <span style="font-size: 1.5rem;">📁</span>
         <strong style="color: #fff;">Click or Drag & Drop Images Here</strong>
-        <span class="muted">Supports PNG, JPG, WebP up to 12MB. Stored entirely in browser.</span>
+        <span class="muted">Supports PNG, JPG, WebP up to 12MB. Stored locally in browser.</span>
         <input type="file" accept="image/*" style="display:none;" />
       `;
 

@@ -1,13 +1,52 @@
 /* ==========================================================================
    Widget Card Common Styling
    ========================================================================== */
+.widget {
+  min-width: 0;
+  grid-column: var(--grid-x, 1) / span var(--grid-w, 4);
+  grid-row: var(--grid-y, 1) / span var(--grid-h, 4);
+  background: rgba(var(--panel-bg-rgb), var(--hypr-opacity, 0.72));
+  border: var(--hypr-border-width, 1px) solid var(--hypr-border-color);
+  border-radius: var(--hypr-radius, 16px);
+  backdrop-filter: blur(var(--hypr-blur, 20px));
+  box-shadow: var(--hypr-shadow);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-smooth), border-color var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.widget:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 16px 48px -10px rgba(0, 0, 0, 0.7), 0 0 18px rgba(var(--page-accent-rgb), 0.25);
+}
+
+.widget:focus-within {
+  border-color: var(--page-accent);
+}
+
+/* Drag & Drop Visuals */
+.widget.is-dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+  border: 2px dashed var(--page-accent);
+}
+
+.widget.drag-over {
+  border-color: var(--page-accent) !important;
+  box-shadow: 0 0 24px var(--page-accent-glow) !important;
+  transform: scale(1.02);
+}
+
 .widget-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
+  padding: 12px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
+  user-select: none;
 }
 
 .widget-title-group {
@@ -25,7 +64,7 @@
 
 .widget-title {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -35,7 +74,7 @@
 .widget-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .widget-btn {
@@ -50,10 +89,38 @@
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
   transition: all var(--transition-fast);
+  cursor: pointer;
 }
 
 .widget-btn:hover {
   background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-color: var(--page-accent);
+}
+
+.move-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.move-arrow-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.move-arrow-btn:hover {
+  background: var(--page-accent);
   color: #fff;
   border-color: var(--page-accent);
 }
@@ -67,7 +134,7 @@
 }
 
 .widget-body {
-  padding: 16px 18px;
+  padding: 16px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -83,13 +150,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 14px;
+  padding-bottom: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .race-meta h3 {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 4px;
   color: #fff;
@@ -99,7 +166,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-secondary);
 }
 
@@ -111,7 +178,7 @@
 }
 
 .countdown-label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
@@ -119,7 +186,7 @@
 
 .countdown-digits {
   font-family: var(--font-mono);
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--page-accent);
   text-shadow: 0 0 12px var(--page-accent-glow);
@@ -129,7 +196,7 @@
 .session-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
 }
 
@@ -137,11 +204,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 8px 10px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
-  font-size: 0.85rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
   transition: all var(--transition-fast);
 }
 
@@ -151,12 +218,12 @@
 }
 
 .session-item.active {
-  background: rgba(var(--page-accent-rgb), 0.12);
+  background: rgba(var(--page-accent-rgb), 0.15);
   border-color: var(--page-accent);
 }
 
 .session-item.done {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .session-name-group {
@@ -167,7 +234,7 @@
 
 .session-badge {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
@@ -177,7 +244,7 @@
 
 .session-time {
   font-family: var(--font-mono);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
 }
 
@@ -189,15 +256,15 @@
   gap: 6px;
   padding: 4px;
   background: rgba(0, 0, 0, 0.25);
-  border-radius: 10px;
-  margin-bottom: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
 }
 
 .tab-btn {
   flex: 1;
   padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 0.78rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -225,14 +292,14 @@
 
 .standing-row {
   display: grid;
-  grid-template-columns: 28px 4px 1fr auto;
+  grid-template-columns: 26px 4px 1fr auto;
   align-items: center;
   gap: 10px;
-  padding: 7px 10px;
+  padding: 6px 10px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 10px;
-  font-size: 0.88rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
   transition: all var(--transition-fast);
 }
 
@@ -245,7 +312,7 @@
 .standing-pos {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
   text-align: center;
 }
@@ -256,7 +323,7 @@
 
 .team-color-bar {
   width: 4px;
-  height: 20px;
+  height: 18px;
   border-radius: 999px;
   background-color: var(--row-team-color, #fff);
   box-shadow: 0 0 8px var(--row-team-color, #fff);
@@ -277,16 +344,16 @@
 }
 
 .team-name {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
 .points-badge {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: #fff;
-  padding: 3px 8px;
+  padding: 2px 7px;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 6px;
 }
@@ -296,7 +363,7 @@
    ========================================================================== */
 .shortcut-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 10px;
   flex: 1;
 }
@@ -308,13 +375,12 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px 10px;
+  padding: 12px 8px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 12px;
   transition: all var(--transition-fast);
   text-align: center;
-  group: true;
 }
 
 .shortcut-tile:hover {
@@ -325,8 +391,8 @@
 }
 
 .shortcut-favicon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
   object-fit: contain;
   background: rgba(255, 255, 255, 0.1);
@@ -334,7 +400,7 @@
 }
 
 .shortcut-title-text {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-primary);
   max-width: 100%;
@@ -375,11 +441,11 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 14px 10px;
+  padding: 12px 8px;
   border: 1px dashed rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   transition: all var(--transition-fast);
 }
@@ -396,7 +462,7 @@
 .streams-hub {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   flex: 1;
 }
 
@@ -407,9 +473,9 @@
 
 .session-dropdown {
   flex: 1;
-  background: rgba(10, 14, 24, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  background: rgba(10, 14, 24, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
   padding: 8px 12px;
   color: var(--text-primary);
   font-size: 0.85rem;
@@ -441,40 +507,41 @@
 }
 
 .channel-chip:hover {
-  background: rgba(255, 0, 0, 0.2);
-  border-color: #ff0000;
+  background: rgba(var(--page-accent-rgb), 0.2);
+  border-color: var(--page-accent);
   color: #fff;
   transform: translateY(-1px);
 }
 
+/* Theme Colored Live Search Button */
 .youtube-hero-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 10px 16px;
+  gap: 8px;
+  padding: 11px 16px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #e10600, #b20500);
+  background: var(--page-accent);
   color: #fff;
   font-weight: 700;
   font-size: 0.88rem;
-  box-shadow: 0 4px 16px rgba(225, 6, 0, 0.35);
+  box-shadow: 0 4px 16px var(--page-accent-glow);
   transition: all var(--transition-fast);
   text-align: center;
 }
 
 .youtube-hero-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 22px rgba(225, 6, 0, 0.55);
+  box-shadow: 0 6px 24px var(--page-accent-glow);
 }
 
-/* Source / Timestamp footer */
+/* Source / Info Footer */
 .source-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.72rem;
   color: var(--text-muted);
