@@ -1,6 +1,6 @@
-# 🏎️ HYPR//F1 — Formula 1 Command Center & New Tab Page
+# 🏎️ HYPR//F1 — F1 Command Center New Tab
 
-> A sleek, high-performance motorsport command center & Chrome New Tab extension inspired by **Hyprland on Arch Linux**. Features live F1 countdowns, full weekend session timetables, championship standings, YouTube commentary stream discovery, speed-dial shortcuts, and curated team wallpapers.
+> A Formula 1 new tab page for Chrome, styled like Hyprland on Arch Linux. Live race countdowns, full session timetables, driver/constructor standings, YouTube commentary finder, speed-dial shortcuts, and wallpapers for every team.
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)
 ![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-blue.svg)
@@ -9,146 +9,130 @@
 
 ---
 
-## ✨ Features
+## What it does
 
-- **🪟 Hyprland-Inspired Glassmorphism**:
-  - Frosted acrylic backdrop blur (`backdrop-filter: blur(20px)`).
-  - Customizable tile opacity (20% to 100% translucent glass).
-  - Dynamic active border glow matched to your favorite F1 team's livery colors.
-  - Customizable corner radius (`0px` to `36px`) and tiling gap (`4px` to `36px`).
+Every time you open a new tab you get a full F1 dashboard instead of the default Chrome page. The whole thing is styled like a Hyprland tiling window manager — frosted glass widgets, glowing borders in your team's livery color, the works.
 
-- **📟 Waybar Top Status Bar**:
-  - Real-time digital clock and date with blinking colon.
-  - Live Track / Session status pill (🟢 `TRACK GREEN` / 🟡 `SAFETY CAR` / 🔴 `RED FLAG`) with pulsing dot.
-  - Quick-switch pill bar for all 10 F1 teams (Red Bull, Ferrari, McLaren, Mercedes, Aston Martin, Alpine, Williams, Haas, Stake Sauber, Racing Bulls).
-  - Quick search focus button (or press `/` anywhere on the page).
+### The widgets
 
-- **🏁 Grand Prix Weekend Hub**:
-  - Live ticking countdown to the very next event.
-  - Full session timetable: **FP1, FP2, FP3, Sprint Shootout, Sprint, Qualifying, and Grand Prix Race**.
-  - Start times automatically converted to your browser's local timezone (or UTC).
-  - Dynamic status badges: `COMPLETED`, `LIVE`, `NEXT`, `UPCOMING`.
+**Waybar (top bar)**
+- Live clock with blinking colon
+- Track status pill that shows LIVE / LIGHTS OUT SOON / TRACK GREEN depending on where we are in the race weekend
+- Quick team switcher pills for all 10 teams — switches the accent color and wallpaper instantly
+- Theme toggle (light/dark), refresh, and settings buttons
 
-- **🏆 Championship Standings Hub**:
-  - Interactive tabs for **Drivers Championship** and **Constructors Championship**.
-  - Official team color stripes, driver codes (e.g. `VER`, `NOR`, `LEC`), team names, points tally, and win counters.
+**Grand Prix Weekend Hub**
+- Countdown timer ticking down to the next session
+- Full weekend timetable — FP1, FP2, FP3, Sprint Shootout, Sprint, Qualifying, Race — with DONE/LIVE/NEXT status badges
+- Times shown in your local timezone by default (UTC option in settings)
 
-- **📺 YouTube Commentary & Stream Discovery**:
-  - Smart session selector (Race Commentary, Qualifying Live, Free Practice, Post-Race Analysis).
-  - 1-click legal live commentary search (P1 with Matt & Tommy, The Race, Sky Sports F1, Autosport, F1 Live).
-  - Works 100% client-side with zero API keys required.
+**Championship Standings**
+- Driver standings and Constructor standings in separate tabs
+- Team color bars, driver codes, points — pulls live from the Jolpica F1 API
 
-- **🖼️ Curated Wallpapers & Dynamic Background Engine**:
-  - Built-in handcrafted SVG motorsport speedline wallpapers for every team.
-  - Multiple rotation modes: **Random per tab**, **Sequential per tab**, **Live auto-slideshow timer (5s - 180s)**, or **Static**.
-  - Drag-and-drop custom image uploader with local IndexedDB storage.
+**YouTube Commentary Finder**
+- Picks the current or most recent GP automatically
+- One click builds a YouTube search for race/qualifying/practice commentary from the proper channels (The Race, Sky Sports F1, P1 with Matt & Tommy, etc.)
+- No API key, just opens a search URL
 
-- **🔗 Pinned Shortcuts Speed-Dial**:
-  - Translucent glass speed-dial tiles with automatic high-resolution Google favicon resolution.
-  - Quick "+ Add Link" and hover delete.
+**Speed Dial Shortcuts**
+- Glass tiles with favicons for your most visited F1 sites
+- Comes with Formula1.com, F1 TV, r/formula1 etc. pre-loaded, fully editable
 
-- **⚙️ Hyprland Control Center**:
-  - Floating modal with live preview sliders for opacity, blur, corner rounding, gap spacing, and color accents.
-  - JSON settings export, import, layout reset, and local data wiping.
+**Settings (Hyprland Control Center)**
+- Sliders for glass opacity, blur intensity, corner rounding, and grid gap — all update live
+- Team accent color picker
+- Wallpaper gallery with all 10 team SVGs, plus drag-and-drop custom image upload (stored locally in IndexedDB)
+- Light and dark mode
 
 ---
 
-## 🏗️ Architecture & Project Structure
+## Project structure
 
 ```text
-ALL-F1-Fans-New-Tab-Page/
-├── src/
-│   ├── manifest.json              # Chrome Manifest V3 configuration
-│   ├── newtab.html                # Main New Tab markup & Waybar
-│   ├── assets/
-│   │   └── backgrounds/           # Curated SVG wallpapers for all 10 teams
-│   │       ├── circuit-dark.svg
-│   │       ├── red-bull.svg
-│   │       ├── ferrari.svg
-│   │       ├── mclaren.svg
-│   │       ├── mercedes.svg
-│   │       └── ...
-│   ├── data/
-│   │   ├── teams.json             # F1 teams metadata and livery colors
-│   │   ├── built-in-backgrounds.json # Wallpaper registry
-│   │   └── default-layout.json    # Default widget coordinates
-│   ├── js/
-│   │   ├── app.js                 # App entrypoint & Waybar lifecycle
-│   │   ├── state.js               # State validation & default settings
-│   │   ├── storage.js             # chrome.storage & localStorage hybrid
-│   │   ├── layout.js              # Hyprland grid manager & drag handles
-│   │   ├── background.js          # Wallpaper playlist & slideshow engine
-│   │   ├── indexeddb.js           # Client-side image database
-│   │   ├── search.js              # Multi-engine search & '/' hotkey
-│   │   ├── providers/
-│   │   │   ├── jolpica.js         # Jolpica schedule & standings adapter
-│   │   │   ├── openf1.js          # OpenF1 sessions adapter
-│   │   │   └── provider-utils.js  # Live countdown & date formatters
-│   │   └── widgets/
-│   │       ├── race-weekend.js    # Grand Prix timetable widget
-│   │       ├── standings.js       # Drivers & Constructors standings
-│   │       ├── streams.js         # YouTube commentary finder
-│   │       ├── shortcuts.js       # Speed dial shortcuts
-│   │       └── settings.js        # Hyprland customizer modal
-│   └── styles/
-│       ├── tokens.css             # Hyprland tokens & team livery variables
-│       ├── base.css               # Typography, scrollbars & reset
-│       ├── layout.css             # Waybar topbar & 12-column grid
-│       ├── widgets.css            # Bespoke card styling & animations
-│       └── settings.css           # Control center modal styling
-├── test/
-│   └── unit/                      # Automated Node.js unit tests
-├── scripts/
-│   ├── build.mjs                  # Generates production dist/ bundle
-│   └── validate.mjs               # Scans for security, secrets, and syntax
-├── index.html                     # Live web preview entrypoint for GitHub Pages
-├── DEVLOG.md                      # Development journey devlog
-└── package.json
+src/
+├── manifest.json              # Chrome Manifest V3
+├── newtab.html                # Main page
+├── assets/backgrounds/        # SVG wallpapers for all 10 teams
+├── data/
+│   ├── teams.json             # Team colors and metadata
+│   ├── built-in-backgrounds.json
+│   └── default-layout.json
+├── js/
+│   ├── app.js                 # Main entry, Waybar, settings wiring
+│   ├── state.js               # State schema and validation
+│   ├── storage.js             # chrome.storage + localStorage fallback
+│   ├── layout.js              # Grid manager and drag handles
+│   ├── background.js          # Wallpaper rotation and slideshow
+│   ├── indexeddb.js           # Custom image storage
+│   ├── search.js              # Search bar, engine picker, / hotkey
+│   ├── providers/
+│   │   ├── jolpica.js         # F1 schedule and standings
+│   │   ├── openf1.js          # OpenF1 sessions
+│   │   └── provider-utils.js  # Countdown and date formatting
+│   └── widgets/
+│       ├── race-weekend.js
+│       ├── standings.js
+│       ├── streams.js
+│       ├── shortcuts.js
+│       └── settings.js
+└── styles/
+    ├── tokens.css             # CSS variables — colors, blur, radius etc
+    ├── base.css               # Reset and typography
+    ├── layout.css             # Waybar and grid
+    ├── widgets.css            # Widget card styles
+    └── settings.css           # Settings modal
+
+scripts/
+├── build.mjs                  # Builds dist/
+├── pack.mjs                   # Zips dist/ for Chrome install
+└── validate.mjs               # Checks for secrets and syntax errors
+
+test/unit/                     # Node.js unit tests
+index.html                     # GitHub Pages entry point
 ```
 
 ---
 
-## 🚀 Quick Start & Development
+## Setup
 
-### Requirements
-- Node.js 18+ (for testing and build scripts)
-- Google Chrome or Chromium-based browser (Brave, Edge, Arc)
+You need Node.js 18+ for the build tooling. The extension itself has zero runtime dependencies.
 
-### 1. Test & Build
+### Install & build
+
 ```bash
-# Run automated unit tests
-npm test
-
-# Run security & code validation
-npm run validate
-
-# Build extension to dist/
-npm run build
+npm test          # run unit tests
+npm run validate  # check for secrets/issues
+npm run build     # builds to dist/
+npm run pack      # zips dist/ to f1-fans-new-tab.zip
 ```
 
-### 2. Load Extension in Chrome
-1. Open Google Chrome and navigate to `chrome://extensions/`.
-2. Toggle on **Developer mode** in the top right corner.
-3. Click **Load unpacked** and select the `dist/` directory from this repository.
-4. Open a new tab to see the **HYPR//F1 Command Center**!
+### Load in Chrome (developer mode)
 
-### 3. Deploy as a Website (GitHub Pages / Vercel)
-This project is built to work both as a Chrome Extension and as a standalone web app:
-- **GitHub Pages**: Go to your repository settings -> Pages -> Deploy from branch `main` / root.
-- **Vercel / Netlify**: Deploy directly by pointing the root directory to `index.html`.
+1. Go to `chrome://extensions/`
+2. Turn on **Developer mode** (top right toggle)
+3. Click **Load unpacked** → select the `dist/` folder
+4. Open a new tab
 
----
+Or just drag `f1-fans-new-tab.zip` onto the extensions page if you've already run `npm run pack`.
 
-## 🔒 Privacy & Permissions
+### Deploy as a website
 
-- **Minimal Permissions**: The extension requests only `storage` in its Manifest V3. No browsing history, no tab access, no external script injection.
-- **Zero Cloud Tracking**: All user settings, custom uploaded images, and shortcut links remain stored locally in your browser (`chrome.storage.local` and `IndexedDB`).
-- **No API Keys Required**: Uses public Jolpica F1 API endpoints and direct browser search builders.
+Works as a standalone web app too — it falls back to `localStorage` when `chrome.storage` isn't available.
+
+- **GitHub Pages**: repo settings → Pages → deploy from `main` / root
+- **Vercel / Netlify**: point at `index.html`
 
 ---
 
-## 📄 License & Credits
+## Privacy
 
-- Built with ❤️ by [HanYC666](https://github.com/HanYC666)
-- F1 telemetry powered by [Jolpica F1 API](https://api.jolpi.ca/ergast/f1/) and [OpenF1](https://openf1.org/)
-- Licensed under the [MIT License](LICENSE).
+Requests only the `storage` permission. No history access, no tab access. All settings and uploaded images stay in your local browser storage. See [PRIVACY.md](PRIVACY.md) for the full breakdown.
+
+---
+
+## Credits
+
+- Built by [HanYC666](https://github.com/HanYC666)
+- F1 data from [Jolpica F1 API](https://api.jolpi.ca/ergast/f1/) and [OpenF1](https://openf1.org/)
+- MIT License
