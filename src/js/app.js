@@ -14,13 +14,16 @@ import { countdown } from "./providers/provider-utils.js";
 import { DEFAULT_STATE } from "./state.js";
 import teams from "../data/teams.json" with { type: "json" };
 
-let state,
+let state = JSON.parse(JSON.stringify(DEFAULT_STATE)),
   data = { schedule: [], drivers: [], constructors: [], provider: "offline" },
   streams = { results: [] };
 
 const grid = () => document.querySelector("#widget-grid");
 
 function applyCssTokens() {
+  const isLight = state.theme.colorScheme === "light";
+  document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
+
   document.documentElement.style.setProperty(
     "--hypr-opacity",
     state.theme.panelOpacity ?? 0.72,
@@ -50,6 +53,13 @@ function applyCssTokens() {
     const g = parseInt(activeAccent.slice(3, 5), 16);
     const b = parseInt(activeAccent.slice(5, 7), 16);
     document.documentElement.style.setProperty("--page-accent-rgb", `${r}, ${g}, ${b}`);
+  }
+
+  // Update theme toggle button in Waybar
+  const themeToggleBtn = document.querySelector("#theme-toggle-btn");
+  if (themeToggleBtn) {
+    themeToggleBtn.innerHTML = isLight ? "🌙" : "☀️";
+    themeToggleBtn.title = isLight ? "Switch to Dark Mode" : "Switch to Light Mode";
   }
 }
 
@@ -128,12 +138,12 @@ function renderTeamPills() {
     btn.textContent = t.short || t.label;
     btn.title = t.label;
 
-    btn.addEventListener("click", async () => {
+    btn.addEventListener("click", () => {
       state.theme.teamFilter = t.id;
       state.theme.accentColor = t.accent;
-      await save();
+      save();
       applyCssTokens();
-      await applyBackground(state);
+      applyBackground(state);
       renderTeamPills();
       rerender();
     });
@@ -168,8 +178,8 @@ function rerender() {
   updateTrackStatus(data);
 }
 
-async function save() {
-  state = await saveState(state);
+function save() {
+  saveState(state);
 }
 
 async function refreshData() {
@@ -194,7 +204,7 @@ async function refreshData() {
     state.cache.standings = { ...standings, expiresAt: Date.now() + 1800000 };
     state.cache.constructors = { ...constr, expiresAt: Date.now() + 1800000 };
 
-    await save();
+    save();
     updateTrackStatus(data);
     rerender();
     announce(`F1 telemetry synced from Jolpica at ${new Date().toLocaleTimeString()}.`);
@@ -250,7 +260,8 @@ async function importSettings(file) {
         layout: parsed.layout || state.layout,
         shortcuts: parsed.shortcuts || state.shortcuts,
       };
-      await save();
+      save();
+      applyCssTokens();
       rerender();
       await applyBackground(state);
       renderTeamPills();
@@ -267,7 +278,8 @@ async function reset(kind) {
     const fresh = await loadState();
     state.layout = fresh.layout;
   }
-  await save();
+  save();
+  applyCssTokens();
   rerender();
   await applyBackground(state);
   renderTeamPills();
@@ -276,12 +288,12 @@ async function reset(kind) {
 
 function openSettings() {
   renderSettings(state, {
-    onChange: async () => {
+    onChange: () => {
       applyCssTokens();
-      await save();
-      rerender();
-      await applyBackground(state);
+      save();
+      applyBackground(state);
       renderTeamPills();
+      rerender();
     },
     onReset: reset,
     onImport: importSettings,
@@ -309,8 +321,19 @@ async function init() {
   initSearch(state.preferences.defaultSearchTarget || "google");
   renderTeamPills();
 
+  // Settings & Refresh Buttons
   document.querySelector("#settings-button").addEventListener("click", openSettings);
   document.querySelector("#refresh-button").addEventListener("click", refreshData);
+
+  // Light/Dark Theme Quick Toggle Button
+  const themeToggleBtn = document.querySelector("#theme-toggle-btn");
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", () => {
+      state.theme.colorScheme = state.theme.colorScheme === "light" ? "dark" : "light";
+      save();
+      applyCssTokens();
+    });
+  }
 
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
