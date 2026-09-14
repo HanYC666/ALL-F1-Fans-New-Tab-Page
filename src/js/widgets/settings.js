@@ -5,6 +5,7 @@ import teams from "../../data/teams.json" with { type: "json" };
 import backgrounds from "../../data/built-in-backgrounds.json" with { type: "json" };
 
 let activeSettingsTab = "hyprland";
+let selectedTeamGalleryId = null;
 
 export function renderSettings(
   state,
@@ -18,6 +19,7 @@ export function renderSettings(
     panel.hidden = true;
     backdrop.hidden = true;
     document.querySelector("#settings-button").setAttribute("aria-expanded", "false");
+    selectedTeamGalleryId = null;
     onChange();
   };
 
@@ -197,183 +199,396 @@ export function renderSettings(
 
     // 2. Wallpapers & Gallery Tab
     else if (activeSettingsTab === "wallpapers") {
-      const secTitle = document.createElement("div");
-      secTitle.className = "settings-section-title";
-      secTitle.textContent = "Team Wallpapers & Dynamic Rotation";
-      contentContainer.append(secTitle);
+      const userImages = (await listImages()) || [];
+      const disabledSet = new Set(state.theme.disabledBackgrounds || []);
 
-      const grid = document.createElement("div");
-      grid.className = "settings-grid";
+      // If viewing a specific team's gallery
+      if (selectedTeamGalleryId !== null) {
+        const currentTeam = teams.find((t) => t.id === selectedTeamGalleryId) || teams[0];
+        const teamAccent = currentTeam.accent || "var(--page-accent)";
 
-      // Team Filter
-      const teamFilterRow = document.createElement("div");
-      teamFilterRow.className = "setting-row";
-      teamFilterRow.innerHTML = `
-        <div class="setting-info">
-          <span class="setting-label">Active Team Filter</span>
-          <span class="setting-desc">Choose which team wallpapers to rotate</span>
-        </div>
-      `;
-      const teamSel = document.createElement("select");
-      teamSel.className = "setting-select";
-      teams.forEach((t) => {
-        const o = document.createElement("option");
-        o.value = t.id;
-        o.textContent = t.label;
-        if (state.theme.teamFilter === t.id) o.selected = true;
-        teamSel.append(o);
-      });
-      teamSel.addEventListener("change", () => {
-        state.theme.teamFilter = teamSel.value;
-        const matched = teams.find((x) => x.id === teamSel.value);
-        if (matched) state.theme.accentColor = matched.accent;
-        onChange();
-        renderTabContent();
-      });
-      teamFilterRow.append(teamSel);
-      grid.append(teamFilterRow);
+        // Header with Back button and Team Title
+        const headerRow = document.createElement("div");
+        headerRow.className = "team-gallery-header";
 
-      // Rotation Mode
-      const rotRow = document.createElement("div");
-      rotRow.className = "setting-row";
-      rotRow.innerHTML = `
-        <div class="setting-info">
-          <span class="setting-label">Wallpaper Mode</span>
-          <span class="setting-desc">How images transition on new tab or over time</span>
-        </div>
-      `;
-      const rotSel = document.createElement("select");
-      rotSel.className = "setting-select";
-      [
-        { id: "random-new-tab", label: "Random on every new tab" },
-        { id: "sequential-new-tab", label: "Sequential on every new tab" },
-        { id: "slideshow", label: "Live auto-slideshow timer" },
-        { id: "static", label: "Static single wallpaper" },
-      ].forEach((m) => {
-        const o = document.createElement("option");
-        o.value = m.id;
-        o.textContent = m.label;
-        if (state.theme.backgroundMode === m.id) o.selected = true;
-        rotSel.append(o);
-      });
-      rotSel.addEventListener("change", () => {
-        state.theme.backgroundMode = rotSel.value;
-        onChange();
-      });
-      rotRow.append(rotSel);
-      grid.append(rotRow);
+        const headerLeft = document.createElement("div");
+        headerLeft.className = "team-gallery-header-left";
 
-      // Slideshow Timer Interval
-      grid.append(createSliderRow(
-        "Slideshow Timer Interval",
-        "Seconds between automatic wallpaper changes",
-        state.theme.backgroundIntervalSeconds ?? 30,
-        5,
-        180,
-        5,
-        "s",
-        (v) => {
-          state.theme.backgroundIntervalSeconds = v;
+        const backBtn = document.createElement("button");
+        backBtn.type = "button";
+        backBtn.className = "btn-secondary";
+        backBtn.innerHTML = `← All Teams`;
+        backBtn.title = "Return to constructor galleries";
+        backBtn.addEventListener("click", () => {
+          selectedTeamGalleryId = null;
+          renderTabContent();
+        });
+
+        const titleBox = document.createElement("div");
+        titleBox.className = "team-gallery-title-box";
+
+        const accentBar = document.createElement("div");
+        accentBar.className = "team-gallery-accent-bar";
+        accentBar.style.setProperty("--team-gallery-accent", teamAccent);
+
+        const titleText = document.createElement("span");
+        titleText.className = "team-gallery-title";
+        titleText.textContent = `${currentTeam.label} Gallery`;
+
+        titleBox.append(accentBar, titleText);
+        headerLeft.append(backBtn, titleBox);
+
+        const headerRight = document.createElement("div");
+        const isActiveTeam = state.theme.teamFilter === currentTeam.id;
+
+        const setTeamBtn = document.createElement("button");
+        setTeamBtn.type = "button";
+        setTeamBtn.className = isActiveTeam ? "btn-primary" : "btn-secondary";
+        setTeamBtn.textContent = isActiveTeam ? "Active Theme" : "Set as Active Team";
+        setTeamBtn.addEventListener("click", () => {
+          state.theme.teamFilter = currentTeam.id;
+          state.theme.accentColor = currentTeam.accent;
           onChange();
+          renderTabContent();
+        });
+        headerRight.append(setTeamBtn);
+
+        headerRow.append(headerLeft, headerRight);
+        contentContainer.append(headerRow);
+
+        // Filter wallpapers belonging to this team
+        const teamBuiltIns = backgrounds.filter((bg) =>
+          currentTeam.id === "all" ? bg.team === "all" : bg.team === currentTeam.id
+        );
+        const activeBuiltIns = teamBuiltIns.filter((bg) => !disabledSet.has(bg.id));
+        const deletedBuiltIns = teamBuiltIns.filter((bg) => disabledSet.has(bg.id));
+
+        const teamUploads = userImages.filter((img) =>
+          currentTeam.id === "all" ? (img.team === "all" || !img.team) : img.team === currentTeam.id
+        );
+
+        const totalImages = activeBuiltIns.length + teamUploads.length;
+
+        const galSecTitle = document.createElement("div");
+        galSecTitle.className = "settings-section-title";
+        galSecTitle.textContent = `Wallpapers (${totalImages})`;
+        contentContainer.append(galSecTitle);
+
+        if (totalImages > 0) {
+          const galleryGrid = document.createElement("div");
+          galleryGrid.className = "gallery-grid";
+
+          // 1. Render active built-ins
+          activeBuiltIns.forEach((bg) => {
+            const card = document.createElement("div");
+            const isCurrentBg = state.cache.lastBackground === bg.id;
+            card.className = `gallery-card ${isCurrentBg ? "active" : ""}`;
+            card.title = `${bg.alt} (Built-in Default)`;
+            card.innerHTML = `
+              <img src="${bg.src}" alt="${bg.alt}" loading="lazy" />
+              <span class="gallery-card-badge ${isCurrentBg ? "badge-active" : ""}">Default</span>
+              <button class="gallery-card-delete" title="Delete default wallpaper">✕</button>
+            `;
+
+            // Delete default handler
+            const delBtn = card.querySelector(".gallery-card-delete");
+            delBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              if (!state.theme.disabledBackgrounds) state.theme.disabledBackgrounds = [];
+              if (!state.theme.disabledBackgrounds.includes(bg.id)) {
+                state.theme.disabledBackgrounds.push(bg.id);
+              }
+              if (state.cache.lastBackground === bg.id) {
+                state.cache.lastBackground = null;
+              }
+              onChange();
+              renderTabContent();
+            });
+
+            // Click to select as active background
+            card.addEventListener("click", () => {
+              state.theme.teamFilter = currentTeam.id;
+              state.theme.accentColor = currentTeam.accent;
+              state.cache.lastBackground = bg.id;
+              onChange();
+              renderTabContent();
+            });
+
+            galleryGrid.append(card);
+          });
+
+          // 2. Render custom user uploads
+          teamUploads.forEach((img) => {
+            const card = document.createElement("div");
+            const isCurrentBg = state.cache.lastBackground === img.id;
+            card.className = `gallery-card ${isCurrentBg ? "active" : ""}`;
+            card.title = `${img.filename} (Custom upload)`;
+            const thumbUrl = URL.createObjectURL(img.thumbnailBlob || img.blob);
+            card.innerHTML = `
+              <img src="${thumbUrl}" alt="${img.filename}" loading="lazy" />
+              <span class="gallery-card-badge ${isCurrentBg ? "badge-active" : ""}">Custom</span>
+              <button class="gallery-card-delete" title="Delete custom wallpaper">✕</button>
+            `;
+
+            // Delete custom upload handler
+            const delBtn = card.querySelector(".gallery-card-delete");
+            delBtn.addEventListener("click", async (e) => {
+              e.stopPropagation();
+              await deleteImage(img.id);
+              if (state.cache.lastBackground === img.id) {
+                state.cache.lastBackground = null;
+              }
+              onChange();
+              renderTabContent();
+            });
+
+            // Click to select as active background
+            card.addEventListener("click", () => {
+              state.theme.teamFilter = currentTeam.id;
+              state.theme.accentColor = currentTeam.accent;
+              state.cache.lastBackground = img.id;
+              onChange();
+              renderTabContent();
+            });
+
+            galleryGrid.append(card);
+          });
+
+          contentContainer.append(galleryGrid);
+        } else {
+          const emptyBox = document.createElement("div");
+          emptyBox.className = "gallery-empty-box";
+          emptyBox.innerHTML = `
+            <span>No wallpapers currently active in this gallery.</span>
+            <span>Upload custom wallpapers below, or restore the default livery art.</span>
+          `;
+          contentContainer.append(emptyBox);
         }
-      ));
 
-      contentContainer.append(grid);
+        // Restore default button if default was deleted
+        if (deletedBuiltIns.length > 0) {
+          const restoreRow = document.createElement("div");
+          restoreRow.style.cssText = "margin: 12px 0; display: flex; justify-content: flex-start;";
+          const restoreBtn = document.createElement("button");
+          restoreBtn.type = "button";
+          restoreBtn.className = "btn-secondary";
+          restoreBtn.textContent = `↺ Restore ${currentTeam.label} Default Wallpaper`;
+          restoreBtn.addEventListener("click", () => {
+            const ids = new Set(deletedBuiltIns.map((b) => b.id));
+            state.theme.disabledBackgrounds = (state.theme.disabledBackgrounds || []).filter((id) => !ids.has(id));
+            onChange();
+            renderTabContent();
+          });
+          restoreRow.append(restoreBtn);
+          contentContainer.append(restoreRow);
+        }
 
-      // Built-in Wallpaper Gallery
-      const galTitle = document.createElement("div");
-      galTitle.className = "settings-section-title";
-      galTitle.textContent = "Built-in Team Wallpapers";
-      contentContainer.append(galTitle);
+        // Dropzone for this team
+        const uploadTitle = document.createElement("div");
+        uploadTitle.className = "settings-section-title";
+        uploadTitle.style.marginTop = "20px";
+        uploadTitle.textContent = `Upload to ${currentTeam.label} Gallery`;
+        contentContainer.append(uploadTitle);
 
-      const galleryGrid = document.createElement("div");
-      galleryGrid.className = "gallery-grid";
-
-      backgrounds.forEach((bg) => {
-        const card = document.createElement("div");
-        card.className = `gallery-card ${state.cache.lastBackground === bg.id ? "active" : ""}`;
-        card.title = `${bg.alt} (${bg.team})`;
-        card.innerHTML = `
-          <img src="${bg.src}" alt="${bg.alt}" loading="lazy" />
-          <span class="card-team-tag">${bg.team}</span>
+        const dropzone = document.createElement("div");
+        dropzone.className = "upload-dropzone";
+        dropzone.innerHTML = `
+          <strong style="color: var(--text-primary);">Click or Drag & Drop Images Here</strong>
+          <span class="muted">PNG, JPG, or WebP up to 12MB. Stored locally in browser for ${currentTeam.label}.</span>
+          <input type="file" multiple accept="image/*" style="display:none;" />
         `;
-        card.addEventListener("click", () => {
-          state.theme.teamFilter = bg.team;
-          state.cache.lastBackground = bg.id;
-          const matched = teams.find((x) => x.id === bg.team);
+
+        const fileInput = dropzone.querySelector("input");
+        dropzone.addEventListener("click", () => fileInput.click());
+
+        const handleFiles = async (files) => {
+          if (!files || !files.length) return;
+          try {
+            for (const file of files) {
+              const prep = await prepareImage(file, {
+                maxBytes: CONFIG.maxUploadBytes,
+                maxPixels: CONFIG.maxImagePixels,
+              });
+              await putImage({
+                id: `upload-${crypto.randomUUID()}`,
+                team: currentTeam.id,
+                blob: prep.blob,
+                thumbnailBlob: prep.thumbnailBlob,
+                filename: file.name,
+                enabled: true,
+                createdAt: Date.now(),
+              });
+            }
+            onChange();
+            renderTabContent();
+          } catch (err) {
+            alert(`Upload failed: ${err.message}`);
+          }
+        };
+
+        fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+
+        dropzone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropzone.classList.add("dragover");
+        });
+        dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+        dropzone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropzone.classList.remove("dragover");
+          handleFiles(e.dataTransfer?.files);
+        });
+
+        contentContainer.append(dropzone);
+      }
+
+      // If viewing constructor galleries overview (Teams Grid)
+      else {
+        const secTitle = document.createElement("div");
+        secTitle.className = "settings-section-title";
+        secTitle.textContent = "Wallpaper Rotation Settings";
+        contentContainer.append(secTitle);
+
+        const grid = document.createElement("div");
+        grid.className = "settings-grid";
+
+        // Team Filter
+        const teamFilterRow = document.createElement("div");
+        teamFilterRow.className = "setting-row";
+        teamFilterRow.innerHTML = `
+          <div class="setting-info">
+            <span class="setting-label">Active Team Filter</span>
+            <span class="setting-desc">Choose which team wallpapers to rotate on tab</span>
+          </div>
+        `;
+        const teamSel = document.createElement("select");
+        teamSel.className = "setting-select";
+        teams.forEach((t) => {
+          const o = document.createElement("option");
+          o.value = t.id;
+          o.textContent = t.label;
+          if (state.theme.teamFilter === t.id) o.selected = true;
+          teamSel.append(o);
+        });
+        teamSel.addEventListener("change", () => {
+          state.theme.teamFilter = teamSel.value;
+          const matched = teams.find((x) => x.id === teamSel.value);
           if (matched) state.theme.accentColor = matched.accent;
           onChange();
           renderTabContent();
         });
-        galleryGrid.append(card);
-      });
-      contentContainer.append(galleryGrid);
+        teamFilterRow.append(teamSel);
+        grid.append(teamFilterRow);
 
-      // User Uploads & Dropzone
-      const uploadTitle = document.createElement("div");
-      uploadTitle.className = "settings-section-title";
-      uploadTitle.textContent = "Custom Image Uploads (IndexedDB)";
-      contentContainer.append(uploadTitle);
-
-      const dropzone = document.createElement("div");
-      dropzone.className = "upload-dropzone";
-      dropzone.innerHTML = `
-        <strong style="color: var(--text-primary);">Click or Drag & Drop Images Here</strong>
-        <span class="muted">Supports PNG, JPG, WebP up to 12MB. Stored locally in browser.</span>
-        <input type="file" accept="image/*" style="display:none;" />
-      `;
-
-      const fileInput = dropzone.querySelector("input");
-      dropzone.addEventListener("click", () => fileInput.click());
-
-      fileInput.addEventListener("change", async () => {
-        const file = fileInput.files?.[0];
-        if (!file) return;
-        try {
-          const prep = await prepareImage(file, {
-            maxBytes: CONFIG.maxUploadBytes,
-            maxPixels: CONFIG.maxImagePixels,
-          });
-          await putImage({
-            id: `upload-${crypto.randomUUID()}`,
-            team: state.theme.teamFilter,
-            blob: prep.blob,
-            thumbnailBlob: prep.thumbnailBlob,
-            filename: file.name,
-            enabled: true,
-            createdAt: Date.now(),
-          });
-          onChange();
-          renderTabContent();
-        } catch (err) {
-          alert(`Upload failed: ${err.message}`);
-        }
-      });
-
-      contentContainer.append(dropzone);
-
-      // Uploaded Images List
-      const userImages = (await listImages()) || [];
-      if (userImages.length) {
-        const userGrid = document.createElement("div");
-        userGrid.className = "gallery-grid";
-        userImages.forEach((img) => {
-          const uCard = document.createElement("div");
-          uCard.className = "gallery-card";
-          const thumbUrl = URL.createObjectURL(img.thumbnailBlob || img.blob);
-          uCard.innerHTML = `
-            <img src="${thumbUrl}" alt="${img.filename}" />
-            <button class="shortcut-delete-btn" style="opacity:1;" title="Delete image">✕</button>
-          `;
-          uCard.querySelector("button").onclick = async (e) => {
-            e.stopPropagation();
-            await deleteImage(img.id);
-            onChange();
-            renderTabContent();
-          };
-          userGrid.append(uCard);
+        // Rotation Mode
+        const rotRow = document.createElement("div");
+        rotRow.className = "setting-row";
+        rotRow.innerHTML = `
+          <div class="setting-info">
+            <span class="setting-label">Wallpaper Mode</span>
+            <span class="setting-desc">How images transition on new tab or over time</span>
+          </div>
+        `;
+        const rotSel = document.createElement("select");
+        rotSel.className = "setting-select";
+        [
+          { id: "random-new-tab", label: "Random on every new tab" },
+          { id: "sequential-new-tab", label: "Sequential on every new tab" },
+          { id: "slideshow", label: "Live auto-slideshow timer" },
+          { id: "static", label: "Static single wallpaper" },
+        ].forEach((m) => {
+          const o = document.createElement("option");
+          o.value = m.id;
+          o.textContent = m.label;
+          if (state.theme.backgroundMode === m.id) o.selected = true;
+          rotSel.append(o);
         });
-        contentContainer.append(userGrid);
+        rotSel.addEventListener("change", () => {
+          state.theme.backgroundMode = rotSel.value;
+          onChange();
+        });
+        rotRow.append(rotSel);
+        grid.append(rotRow);
+
+        // Slideshow Timer Interval
+        grid.append(createSliderRow(
+          "Slideshow Timer Interval",
+          "Seconds between automatic wallpaper changes",
+          state.theme.backgroundIntervalSeconds ?? 30,
+          5,
+          180,
+          5,
+          "s",
+          (v) => {
+            state.theme.backgroundIntervalSeconds = v;
+            onChange();
+          }
+        ));
+
+        contentContainer.append(grid);
+
+        // Team Galleries Grid
+        const galTitle = document.createElement("div");
+        galTitle.className = "settings-section-title";
+        galTitle.style.marginTop = "20px";
+        galTitle.textContent = "Team Galleries (Click a team to open gallery)";
+        contentContainer.append(galTitle);
+
+        const teamGrid = document.createElement("div");
+        teamGrid.className = "team-gallery-grid";
+
+        teams.forEach((t) => {
+          const teamBuiltIns = backgrounds.filter((bg) =>
+            (t.id === "all" ? bg.team === "all" : bg.team === t.id) && !disabledSet.has(bg.id)
+          );
+          const teamUploads = userImages.filter((img) =>
+            t.id === "all" ? (img.team === "all" || !img.team) : img.team === t.id
+          );
+
+          const count = teamBuiltIns.length + teamUploads.length;
+          const isActive = state.theme.teamFilter === t.id;
+
+          let previewImgSrc = "";
+          if (teamUploads.length > 0) {
+            previewImgSrc = URL.createObjectURL(teamUploads[0].thumbnailBlob || teamUploads[0].blob);
+          } else if (teamBuiltIns.length > 0) {
+            previewImgSrc = teamBuiltIns[0].src;
+          }
+
+          const card = document.createElement("div");
+          card.className = `team-card ${isActive ? "active-team" : ""}`;
+          card.style.setProperty("--team-card-accent", t.accent || "var(--page-accent)");
+          if (t.accentRgb) {
+            card.style.setProperty("--team-card-accent-rgb", t.accentRgb);
+          }
+
+          card.innerHTML = `
+            <div class="team-card-banner"></div>
+            <div class="team-card-preview">
+              ${
+                previewImgSrc
+                  ? `<img src="${previewImgSrc}" alt="${t.label}" loading="lazy" />`
+                  : `<span class="team-card-placeholder">${t.short || t.id.toUpperCase()}</span>`
+              }
+            </div>
+            <div class="team-card-body">
+              <span class="team-card-name">${t.label}</span>
+              <div class="team-card-meta">
+                <span class="team-card-count">${count} wallpaper${count === 1 ? "" : "s"}</span>
+                ${isActive ? `<span class="team-card-active-tag">Active</span>` : ""}
+              </div>
+            </div>
+          `;
+
+          card.addEventListener("click", () => {
+            selectedTeamGalleryId = t.id;
+            renderTabContent();
+          });
+
+          teamGrid.append(card);
+        });
+
+        contentContainer.append(teamGrid);
       }
     }
 

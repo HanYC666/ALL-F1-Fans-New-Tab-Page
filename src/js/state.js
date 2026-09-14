@@ -16,6 +16,7 @@ export const DEFAULT_STATE = {
     gridGapPx: 16,
     borderGlow: true,
     reduceMotion: false,
+    disabledBackgrounds: [],
   },
   layout: {
     locked: false,
@@ -183,6 +184,9 @@ export function sanitizeState(input = {}) {
   if (typeof t.reduceMotion === "boolean") {
     s.theme.reduceMotion = t.reduceMotion;
   }
+  s.theme.disabledBackgrounds = Array.isArray(t.disabledBackgrounds)
+    ? t.disabledBackgrounds.filter((x) => typeof x === "string")
+    : [];
   if (input.layout) {
     s.layout.locked = Boolean(input.layout.locked);
     if (["comfortable", "compact", "spacious"].includes(input.layout.density)) {

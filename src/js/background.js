@@ -9,9 +9,12 @@ let slideshowTimer = null;
 export async function eligibleImages(state) {
   const uploads = (await listImages()) || [];
   const selected = state.theme.teamFilter || "all";
+  const disabled = new Set(state.theme.disabledBackgrounds || []);
 
   const built = backgrounds.filter((x) =>
-    (selected === "all" || x.team === selected || x.team === "all") && x.enabled !== false
+    (selected === "all" || x.team === selected || x.team === "all") &&
+    x.enabled !== false &&
+    !disabled.has(x.id)
   );
 
   const local = uploads.filter((x) =>

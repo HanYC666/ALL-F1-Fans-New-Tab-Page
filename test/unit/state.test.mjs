@@ -61,8 +61,13 @@ test("direct YouTube search does not need an API key", () => {
 });
 
 test("default settings survive sanitization and cache is retained", () => {
-  const s = sanitizeState({ cache: { lastBackground: "fallback-grid" } });
+  const s = sanitizeState({
+    cache: { lastBackground: "fallback-grid" },
+    theme: { disabledBackgrounds: ["ferrari", "mclaren", 123] },
+  });
   assert.equal(s.theme.panelOpacity, 0.72);
   assert.equal(s.theme.backgroundIntervalSeconds, 30);
   assert.equal(s.cache.lastBackground, "fallback-grid");
+  assert.deepEqual(s.theme.disabledBackgrounds, ["ferrari", "mclaren"]);
 });
+

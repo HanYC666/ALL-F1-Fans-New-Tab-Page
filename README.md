@@ -135,4 +135,4 @@ Requests only the `storage` permission. No history access, no tab access. All se
 
 - Built by [HanYC666](https://github.com/HanYC666)
 - F1 data from [Jolpica F1 API](https://api.jolpi.ca/ergast/f1/) and [OpenF1](https://openf1.org/)
-- MIT License
+- You must credit the original owner HanYC666 if you are to modify or redistribute this work in any form.
