@@ -1,5 +1,14 @@
 import { createWidget } from "./widget-registry.js";
 import { safeExternalUrl, youtubeSearchUrl } from "../search.js";
+
+const CURATED_COMMENTARY_CHANNELS = [
+  { name: "P1 Matt & Tommy", query: "P1 with Matt and Tommy live commentary" },
+  { name: "The Race", query: "The Race F1 live watchalong commentary" },
+  { name: "Sky Sports F1", query: "Sky Sports F1 live race commentary" },
+  { name: "Autosport", query: "Autosport F1 live podcast commentary" },
+  { name: "F1 Official", query: "Formula 1 official live reaction" },
+];
+
 export function renderStreams(
   state,
   {
@@ -11,70 +20,112 @@ export function renderStreams(
   } = {},
 ) {
   const body = document.createElement("div");
-  const controls = document.createElement("div");
-  controls.className = "stream-controls";
+  const hub = document.createElement("div");
+  hub.className = "streams-hub";
+
+  // Session Selector
+  const selectorBar = document.createElement("div");
+  selectorBar.className = "session-selector-bar";
+
   const select = document.createElement("select");
-  select.setAttribute("aria-label", "Session to search");
-  ["Race commentary", "Qualifying commentary", "FP2 commentary"].forEach(
-    (x) => {
-      const o = document.createElement("option");
-      o.value = x;
-      o.textContent = x;
-      select.append(o);
-    },
-  );
-  const refresh = document.createElement("button");
-  refresh.type = "button";
-  refresh.textContent = loading ? "Searching…" : "Find streams";
-  refresh.disabled = loading;
-  refresh.addEventListener("click", () => onRefresh(select.value));
-  controls.append(select, refresh);
-  body.append(controls);
-  const direct = document.createElement("a");
-  direct.className = "button-link";
-  direct.href = safeExternalUrl(
-    youtubeSearchUrl({ grandPrix, session: select.value }),
-  );
-  direct.target = "_blank";
-  direct.rel = "noopener noreferrer";
-  direct.textContent = "Search YouTube directly (no API key)";
-  select.addEventListener("change", () => {
-    direct.href = safeExternalUrl(
-      youtubeSearchUrl({ grandPrix, session: select.value }),
-    );
+  select.className = "session-dropdown";
+  select.setAttribute("aria-label", "Session commentary to search");
+
+  [
+    "Race live commentary",
+    "Qualifying live commentary",
+    "FP2 live commentary",
+    "Sprint live commentary",
+    "Post-Race reaction & analysis",
+  ].forEach((x) => {
+    const o = document.createElement("option");
+    o.value = x;
+    o.textContent = x;
+    select.append(o);
   });
-  body.append(direct);
-  const disclaimer = document.createElement("p");
-  disclaimer.className = "muted";
-  disclaimer.textContent =
-    "Commentary search only. Availability and rights vary by region; check the uploader and official page.";
-  body.append(disclaimer);
-  const list = document.createElement("div");
-  (results || []).forEach((x) => {
-    const url = safeExternalUrl(x.url);
-    if (!url) return;
-    const a = document.createElement("a");
-    a.className = "stream-result";
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    const t = document.createElement("strong");
-    t.textContent = x.title;
-    const m = document.createElement("span");
-    m.className = "muted";
-    m.textContent = `${x.channelTitle || "Unknown channel"} · ${
-      x.verifiedByAllowlist ? "Allowlisted" : "Unverified result"
-    } · ${x.status || "video"}`;
-    a.append(t, m);
-    list.append(a);
+
+  const findBtn = document.createElement("button");
+  findBtn.type = "button";
+  findBtn.className = "widget-btn";
+  findBtn.textContent = loading ? "Searching…" : "↻ Check";
+  findBtn.disabled = loading;
+  findBtn.addEventListener("click", () => onRefresh(select.value));
+
+  selectorBar.append(select, findBtn);
+  hub.append(selectorBar);
+
+  // Hero YouTube Direct Search Button
+  const directLink = document.createElement("a");
+  directLink.className = "youtube-hero-btn";
+  directLink.target = "_blank";
+  directLink.rel = "noopener noreferrer";
+
+  const updateDirectLink = () => {
+    directLink.href = safeExternalUrl(
+      youtubeSearchUrl({ grandPrix, session: select.value })
+    ) || "#";
+    directLink.innerHTML = `<span>▶</span> <span>Search "${grandPrix} ${select.value}"</span>`;
+  };
+
+  select.addEventListener("change", updateDirectLink);
+  updateDirectLink();
+  hub.append(directLink);
+
+  // Curated Channels Quick Links
+  const curTitle = document.createElement("p");
+  curTitle.className = "muted";
+  curTitle.textContent = "Quick Stream & Commentary Channels:";
+  hub.append(curTitle);
+
+  const channelRow = document.createElement("div");
+  channelRow.className = "curated-channels";
+
+  CURATED_COMMENTARY_CHANNELS.forEach((c) => {
+    const chip = document.createElement("a");
+    chip.className = "channel-chip";
+    chip.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(grandPrix + " " + c.query)}`;
+    chip.target = "_blank";
+    chip.rel = "noopener noreferrer";
+    chip.innerHTML = `<span>📺</span> <span>${c.name}</span>`;
+    channelRow.append(chip);
   });
-  if (!results?.length && !loading) {
-    const p = document.createElement("p");
-    p.className = error ? "error" : "empty";
-    p.textContent = error ||
-      "Use the direct YouTube search above, or configure the optional proxy for results in this card.";
-    list.append(p);
+  hub.append(channelRow);
+
+  // Structured Proxy Results (if any)
+  if (results?.length) {
+    const resList = document.createElement("div");
+    resList.className = "standings-list";
+    results.forEach((x) => {
+      const url = safeExternalUrl(x.url);
+      if (!url) return;
+      const a = document.createElement("a");
+      a.className = "standing-row";
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.innerHTML = `
+        <span class="widget-icon">▶</span>
+        <span class="team-color-bar" style="background:#ff0000; box-shadow:0 0 8px #f00;"></span>
+        <div class="driver-info">
+          <span class="driver-name">${x.title}</span>
+          <span class="team-name">${x.channelTitle || "YouTube"} · ${x.verifiedByAllowlist ? "Verified" : "Stream"}</span>
+        </div>
+        <span class="points-badge">OPEN</span>
+      `;
+      resList.append(a);
+    });
+    hub.append(resList);
   }
-  body.append(list);
-  return createWidget("streams", "YouTube Commentary Discovery", state, body);
+
+  body.append(hub);
+
+  const source = document.createElement("div");
+  source.className = "source-footer";
+  source.innerHTML = `
+    <span>Legal fan & official commentary discovery</span>
+    <span>No API key required</span>
+  `;
+  body.append(source);
+
+  return createWidget("streams", "Live Streams & Commentary", state, body, "📺");
 }

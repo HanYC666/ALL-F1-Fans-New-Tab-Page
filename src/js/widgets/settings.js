@@ -1,214 +1,545 @@
-import { button } from "../accessibility.js";
 import { CONFIG, safeHex } from "../config.js";
 import { clearLocalState } from "../storage.js";
-import { clearImages, prepareImage, putImage } from "../indexeddb.js";
-const field = (label, control) => {
-  const row = document.createElement("label");
-  row.className = "setting-control";
-  const text = document.createElement("span");
-  text.textContent = label;
-  row.append(text, control);
-  return row;
-};
+import { clearImages, deleteImage, listImages, prepareImage, putImage } from "../indexeddb.js";
+import teams from "../../data/teams.json" with { type: "json" };
+import backgrounds from "../../data/built-in-backgrounds.json" with { type: "json" };
+
+let activeSettingsTab = "hyprland";
+
 export function renderSettings(
   state,
   { onChange, onReset, onImport, onExport, onDelete },
 ) {
   const panel = document.querySelector("#settings-panel");
+  const backdrop = document.querySelector("#settings-backdrop");
   panel.replaceChildren();
-  const close = button("Close", () => {
+
+  const closeSettings = () => {
     panel.hidden = true;
-    document.querySelector("#settings-button").setAttribute(
-      "aria-expanded",
-      "false",
-    );
-  });
-  close.className = "panel-close";
-  panel.append(close);
-  const title = document.createElement("h2");
-  title.textContent = "Settings";
-  panel.append(title);
-  const note = document.createElement("p");
-  note.className = "notice";
-  note.textContent =
-    "Chrome’s native New Tab tiles cannot be read by extensions. Pinned Shortcuts below is the extension-owned replacement; it is not Chrome’s original tile list.";
-  panel.append(note);
-  const timezone = document.createElement("select");
-  ["local", "utc"].forEach((v) => {
-    const o = document.createElement("option");
-    o.value = v;
-    o.textContent = v === "local" ? "Browser local time" : "UTC";
-    timezone.append(o);
-  });
-  timezone.value = state.preferences.timezone;
-  const density = select(
-    ["comfortable", "compact", "spacious"],
-    state.layout.density,
-  );
-  const sections = [["General", [
-    field(
-      "Open links in new tabs",
-      Object.assign(document.createElement("input"), {
-        type: "checkbox",
-        checked: state.preferences.openLinksInNewTab,
-      }),
-    ),
-    field("Timezone", timezone),
-  ]], ["Appearance", [
-    field(
-      "Panel opacity",
-      range(state.theme.panelOpacity, .2, 1, .01, (v) => {
-        state.theme.panelOpacity = v;
+    backdrop.hidden = true;
+    document.querySelector("#settings-button").setAttribute("aria-expanded", "false");
+  };
+
+  backdrop.onclick = closeSettings;
+
+  // Header
+  const header = document.createElement("div");
+  header.className = "settings-header";
+
+  const h2 = document.createElement("h2");
+  h2.innerHTML = `<span>⚙</span> <span>Hyprland Control Center</span>`;
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "icon-btn";
+  closeBtn.textContent = "✕";
+  closeBtn.title = "Close settings (Esc)";
+  closeBtn.addEventListener("click", closeSettings);
+
+  header.append(h2, closeBtn);
+  panel.append(header);
+
+  // Tab Navigation
+  const nav = document.createElement("nav");
+  nav.className = "settings-nav";
+
+  const tabs = [
+    { id: "hyprland", label: "🪟 Hyprland & Theme" },
+    { id: "wallpapers", label: "🖼️ Wallpapers & Gallery" },
+    { id: "general", label: "🏎️ F1 & General" },
+    { id: "backup", label: "💾 Backup & Reset" },
+  ];
+
+  const contentContainer = document.createElement("div");
+  contentContainer.className = "settings-content";
+
+  const renderTabContent = async () => {
+    contentContainer.replaceChildren();
+
+    // 1. Hyprland & Theme Tab
+    if (activeSettingsTab === "hyprland") {
+      const secTitle = document.createElement("div");
+      secTitle.className = "settings-section-title";
+      secTitle.textContent = "Hyprland Glass & Tiling Aesthetics";
+      contentContainer.append(secTitle);
+
+      const grid = document.createElement("div");
+      grid.className = "settings-grid";
+
+      // Opacity
+      grid.append(createSliderRow(
+        "Tile Acrylic Opacity",
+        "Control translucency of widgets (20% to 100%)",
+        Math.round(state.theme.panelOpacity * 100),
+        20,
+        100,
+        1,
+        "%",
+        (v) => {
+          state.theme.panelOpacity = v / 100;
+          onChange();
+        }
+      ));
+
+      // Blur
+      grid.append(createSliderRow(
+        "Backdrop Blur",
+        "Frosted glass blur intensity",
+        state.theme.panelBlurPx ?? 20,
+        0,
+        40,
+        1,
+        "px",
+        (v) => {
+          state.theme.panelBlurPx = v;
+          onChange();
+        }
+      ));
+
+      // Radius
+      grid.append(createSliderRow(
+        "Corner Rounding",
+        "Border radius for all tiles and panels",
+        state.theme.panelRadiusPx ?? 16,
+        0,
+        36,
+        1,
+        "px",
+        (v) => {
+          state.theme.panelRadiusPx = v;
+          onChange();
+        }
+      ));
+
+      // Grid Gap
+      grid.append(createSliderRow(
+        "Tiling Gap",
+        "Spacing between dashboard widgets",
+        state.theme.gridGapPx ?? 16,
+        4,
+        36,
+        1,
+        "px",
+        (v) => {
+          state.theme.gridGapPx = v;
+          onChange();
+        }
+      ));
+
+      // Team Livery Color
+      const teamRow = document.createElement("div");
+      teamRow.className = "setting-row";
+      teamRow.innerHTML = `
+        <div class="setting-info">
+          <span class="setting-label">Team Livery Accent</span>
+          <span class="setting-desc">Sets glowing active border and highlight color</span>
+        </div>
+      `;
+      const colorInput = document.createElement("input");
+      colorInput.type = "color";
+      colorInput.value = safeHex(state.theme.accentColor);
+      colorInput.style.cssText = "width: 44px; height: 32px; border-radius: 6px; cursor: pointer;";
+      colorInput.addEventListener("input", () => {
+        state.theme.accentColor = colorInput.value;
         onChange();
-      }),
-    ),
-    field(
-      "Panel blur",
-      range(state.theme.panelBlurPx, 0, 40, 1, (v) => {
-        state.theme.panelBlurPx = v;
+      });
+      teamRow.append(colorInput);
+      grid.append(teamRow);
+
+      // Lock Layout Toggle
+      const lockRow = document.createElement("div");
+      lockRow.className = "setting-row";
+      lockRow.innerHTML = `
+        <div class="setting-info">
+          <span class="setting-label">Lock Widget Layout</span>
+          <span class="setting-desc">Prevent dragging and moving tiles</span>
+        </div>
+      `;
+      const lockToggle = createToggle(state.layout.locked, (checked) => {
+        state.layout.locked = checked;
         onChange();
-      }),
-    ),
-    field(
-      "Panel radius",
-      range(state.theme.panelRadiusPx, 0, 40, 1, (v) => {
-        state.theme.panelRadiusPx = v;
+      });
+      lockRow.append(lockToggle);
+      grid.append(lockRow);
+
+      contentContainer.append(grid);
+    }
+
+    // 2. Wallpapers & Gallery Tab
+    else if (activeSettingsTab === "wallpapers") {
+      const secTitle = document.createElement("div");
+      secTitle.className = "settings-section-title";
+      secTitle.textContent = "Team Wallpapers & Dynamic Rotation";
+      contentContainer.append(secTitle);
+
+      const grid = document.createElement("div");
+      grid.className = "settings-grid";
+
+      // Team Filter
+      const teamFilterRow = document.createElement("div");
+      teamFilterRow.className = "setting-row";
+      teamFilterRow.innerHTML = `
+        <div class="setting-info">
+          <span class="setting-label">Active Team Filter</span>
+          <span class="setting-desc">Choose which team wallpapers to rotate</span>
+        </div>
+      `;
+      const teamSel = document.createElement("select");
+      teamSel.className = "setting-select";
+      teams.forEach((t) => {
+        const o = document.createElement("option");
+        o.value = t.id;
+        o.textContent = t.label;
+        if (state.theme.teamFilter === t.id) o.selected = true;
+        teamSel.append(o);
+      });
+      teamSel.addEventListener("change", () => {
+        state.theme.teamFilter = teamSel.value;
+        const matched = teams.find((x) => x.id === teamSel.value);
+        if (matched) state.theme.accentColor = matched.accent;
         onChange();
-      }),
-    ),
-    field(
-      "Accent color",
-      Object.assign(document.createElement("input"), {
-        type: "color",
-        value: safeHex(state.theme.accentColor),
-      }),
-    ),
-  ]], ["Layout", [
-    field("Density", density),
-    field(
-      "Lock layout",
-      Object.assign(document.createElement("input"), {
-        type: "checkbox",
-        checked: state.layout.locked,
-      }),
-    ),
-  ]], ["Backgrounds", [
-    field(
-      "Rotation mode",
-      select(
-        ["static", "random-new-tab", "sequential-new-tab", "slideshow"],
-        state.theme.backgroundMode,
-      ),
-    ),
-    field(
-      "Slideshow seconds",
-      range(state.theme.backgroundIntervalSeconds, 5, 3600, 1, (v) => {
-        state.theme.backgroundIntervalSeconds = v;
+        renderTabContent();
+      });
+      teamFilterRow.append(teamSel);
+      grid.append(teamFilterRow);
+
+      // Rotation Mode
+      const rotRow = document.createElement("div");
+      rotRow.className = "setting-row";
+      rotRow.innerHTML = `
+        <div class="setting-info">
+          <span class="setting-label">Wallpaper Mode</span>
+          <span class="setting-desc">How images transition on new tab or over time</span>
+        </div>
+      `;
+      const rotSel = document.createElement("select");
+      rotSel.className = "setting-select";
+      [
+        { id: "random-new-tab", label: "Random on every new tab" },
+        { id: "sequential-new-tab", label: "Sequential on every new tab" },
+        { id: "slideshow", label: "Live auto-slideshow timer" },
+        { id: "static", label: "Static single wallpaper" },
+      ].forEach((m) => {
+        const o = document.createElement("option");
+        o.value = m.id;
+        o.textContent = m.label;
+        if (state.theme.backgroundMode === m.id) o.selected = true;
+        rotSel.append(o);
+      });
+      rotSel.addEventListener("change", () => {
+        state.theme.backgroundMode = rotSel.value;
         onChange();
-      }),
-    ),
-    field(
-      "Team filter",
-      select([
-        "all",
-        "red-bull",
-        "ferrari",
-        "mclaren",
-        "mercedes",
-        "aston-martin",
-        "alpine",
-        "williams",
-        "haas",
-        "sauber",
-        "rb",
-      ], state.theme.teamFilter),
-    ),
-  ]], ["Privacy & data", []]];
-  for (const [name, controls] of sections) {
-    const section = document.createElement("section");
-    section.className = "settings-section";
-    const h = document.createElement("h2");
-    h.textContent = name;
-    section.append(h);
-    const grid = document.createElement("div");
-    grid.className = "settings-grid";
-    controls.forEach((c) => grid.append(c));
-    section.append(grid);
-    panel.append(section);
-  }
-  const actions = document.createElement("div");
-  actions.className = "settings-actions";
-  actions.append(
-    button("Reset layout", () => {
-      onReset("layout");
-    }),
-    button("Reset all settings", () => {
-      onReset("all");
-    }),
-    button("Export settings", onExport),
-  );
-  const importLabel = document.createElement("label");
-  importLabel.append("Import settings");
-  const file = document.createElement("input");
-  file.type = "file";
-  file.accept = "application/json";
-  file.addEventListener(
-    "change",
-    () => file.files[0] && onImport(file.files[0]),
-  );
-  importLabel.append(file);
-  actions.append(
-    importLabel,
-    button("Delete local data", async () => {
-      if (confirm("Delete local settings, cache, and uploaded images?")) {
-        await clearLocalState();
-        await clearImages();
-        onDelete();
+      });
+      rotRow.append(rotSel);
+      grid.append(rotRow);
+
+      // Slideshow Timer Interval
+      grid.append(createSliderRow(
+        "Slideshow Timer Interval",
+        "Seconds between automatic wallpaper changes",
+        state.theme.backgroundIntervalSeconds ?? 30,
+        5,
+        180,
+        5,
+        "s",
+        (v) => {
+          state.theme.backgroundIntervalSeconds = v;
+          onChange();
+        }
+      ));
+
+      contentContainer.append(grid);
+
+      // Built-in Wallpaper Gallery
+      const galTitle = document.createElement("div");
+      galTitle.className = "settings-section-title";
+      galTitle.textContent = "Built-in Team Wallpapers";
+      contentContainer.append(galTitle);
+
+      const galleryGrid = document.createElement("div");
+      galleryGrid.className = "gallery-grid";
+
+      backgrounds.forEach((bg) => {
+        const card = document.createElement("div");
+        card.className = `gallery-card ${state.cache.lastBackground === bg.id ? "active" : ""}`;
+        card.title = `${bg.alt} (${bg.team})`;
+        card.innerHTML = `
+          <img src="${bg.src}" alt="${bg.alt}" loading="lazy" />
+          <span class="card-team-tag">${bg.team}</span>
+        `;
+        card.addEventListener("click", () => {
+          state.theme.teamFilter = bg.team;
+          state.cache.lastBackground = bg.id;
+          const matched = teams.find((x) => x.id === bg.team);
+          if (matched) state.theme.accentColor = matched.accent;
+          onChange();
+          renderTabContent();
+        });
+        galleryGrid.append(card);
+      });
+      contentContainer.append(galleryGrid);
+
+      // User Uploads & Dropzone
+      const uploadTitle = document.createElement("div");
+      uploadTitle.className = "settings-section-title";
+      uploadTitle.textContent = "Custom Image Uploads (Stored Locally in IndexedDB)";
+      contentContainer.append(uploadTitle);
+
+      const dropzone = document.createElement("div");
+      dropzone.className = "upload-dropzone";
+      dropzone.innerHTML = `
+        <span style="font-size: 1.5rem;">📁</span>
+        <strong style="color: #fff;">Click or Drag & Drop Images Here</strong>
+        <span class="muted">Supports PNG, JPG, WebP up to 12MB. Stored entirely in browser.</span>
+        <input type="file" accept="image/*" style="display:none;" />
+      `;
+
+      const fileInput = dropzone.querySelector("input");
+      dropzone.addEventListener("click", () => fileInput.click());
+
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        try {
+          const prep = await prepareImage(file, {
+            maxBytes: CONFIG.maxUploadBytes,
+            maxPixels: CONFIG.maxImagePixels,
+          });
+          await putImage({
+            id: `upload-${crypto.randomUUID()}`,
+            team: state.theme.teamFilter,
+            blob: prep.blob,
+            thumbnailBlob: prep.thumbnailBlob,
+            filename: file.name,
+            enabled: true,
+            createdAt: Date.now(),
+          });
+          onChange();
+          renderTabContent();
+        } catch (err) {
+          alert(`Upload failed: ${err.message}`);
+        }
+      });
+
+      contentContainer.append(dropzone);
+
+      // Uploaded Images List
+      const userImages = (await listImages()) || [];
+      if (userImages.length) {
+        const userGrid = document.createElement("div");
+        userGrid.className = "gallery-grid";
+        userImages.forEach((img) => {
+          const uCard = document.createElement("div");
+          uCard.className = "gallery-card";
+          const thumbUrl = URL.createObjectURL(img.thumbnailBlob || img.blob);
+          uCard.innerHTML = `
+            <img src="${thumbUrl}" alt="${img.filename}" />
+            <button class="shortcut-delete-btn" style="opacity:1;" title="Delete image">✕</button>
+          `;
+          uCard.querySelector("button").onclick = async (e) => {
+            e.stopPropagation();
+            await deleteImage(img.id);
+            onChange();
+            renderTabContent();
+          };
+          userGrid.append(uCard);
+        });
+        contentContainer.append(userGrid);
       }
-    }),
-  );
-  panel.append(actions);
-  const inputs = panel.querySelectorAll("input,select");
-  inputs.forEach((input) => {
-    input.addEventListener("change", () => {
-      if (input.type === "checkbox") {
-        if (input.parentElement.textContent.includes("new tabs")) {
-          state.preferences.openLinksInNewTab = input.checked;
-        } else state.layout.locked = input.checked;
-      } else if (input.type === "color") {
-        state.theme.accentColor = safeHex(input.value);
-      } else if (input.parentElement.textContent.includes("Timezone")) {
-        state.preferences.timezone = input.value;
-      } else if (input.parentElement.textContent.includes("Density")) {
-        state.layout.density = input.value;
-      } else if (input.parentElement.textContent.includes("Rotation")) {
-        state.theme.backgroundMode = input.value;
-      } else if (input.parentElement.textContent.includes("Team")) {
-        state.theme.teamFilter = input.value;
-      }
-      onChange();
+    }
+
+    // 3. F1 & General Tab
+    else if (activeSettingsTab === "general") {
+      const secTitle = document.createElement("div");
+      secTitle.className = "settings-section-title";
+      secTitle.textContent = "General & Preferences";
+      contentContainer.append(secTitle);
+
+      const grid = document.createElement("div");
+      grid.className = "settings-grid";
+
+      // Timezone
+      const tzRow = document.createElement("div");
+      tzRow.className = "setting-row";
+      tzRow.innerHTML = `
+        <div class="setting-info">
+          <span class="setting-label">Schedule Timezone</span>
+          <span class="setting-desc">Display F1 sessions in local time or track/UTC</span>
+        </div>
+      `;
+      const tzSel = document.createElement("select");
+      tzSel.className = "setting-select";
+      [
+        { id: "local", label: "Browser Local Time" },
+        { id: "utc", label: "UTC (Track Time)" },
+      ].forEach((tz) => {
+        const o = document.createElement("option");
+        o.value = tz.id;
+        o.textContent = tz.label;
+        if (state.preferences.timezone === tz.id) o.selected = true;
+        tzSel.append(o);
+      });
+      tzSel.addEventListener("change", () => {
+        state.preferences.timezone = tzSel.value;
+        onChange();
+      });
+      tzRow.append(tzSel);
+      grid.append(tzRow);
+
+      // Open links in new tab
+      const linkRow = document.createElement("div");
+      linkRow.className = "setting-row";
+      linkRow.innerHTML = `
+        <div class="setting-info">
+          <span class="setting-label">Open Shortcuts in New Tab</span>
+          <span class="setting-desc">Launch pinned links and streams in a new tab</span>
+        </div>
+      `;
+      linkRow.append(createToggle(state.preferences.openLinksInNewTab, (c) => {
+        state.preferences.openLinksInNewTab = c;
+        onChange();
+      }));
+      grid.append(linkRow);
+
+      contentContainer.append(grid);
+    }
+
+    // 4. Backup & Reset Tab
+    else if (activeSettingsTab === "backup") {
+      const secTitle = document.createElement("div");
+      secTitle.className = "settings-section-title";
+      secTitle.textContent = "Configuration Backup & Maintenance";
+      contentContainer.append(secTitle);
+
+      const grid = document.createElement("div");
+      grid.className = "settings-grid";
+
+      const actRow = document.createElement("div");
+      actRow.className = "settings-footer";
+      actRow.style.padding = "0";
+
+      const expBtn = document.createElement("button");
+      expBtn.className = "btn-secondary";
+      expBtn.textContent = "Export Settings JSON";
+      expBtn.onclick = onExport;
+
+      const impLabel = document.createElement("label");
+      impLabel.className = "btn-secondary";
+      impLabel.style.cursor = "pointer";
+      impLabel.textContent = "Import JSON File";
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "application/json";
+      fileInput.style.display = "none";
+      fileInput.onchange = () => fileInput.files?.[0] && onImport(fileInput.files[0]);
+      impLabel.append(fileInput);
+
+      actRow.append(expBtn, impLabel);
+      grid.append(actRow);
+
+      const dangerTitle = document.createElement("div");
+      dangerTitle.className = "settings-section-title";
+      dangerTitle.style.color = "#ef4444";
+      dangerTitle.textContent = "Danger Zone";
+      grid.append(dangerTitle);
+
+      const dangerRow = document.createElement("div");
+      dangerRow.className = "settings-footer";
+      dangerRow.style.padding = "0";
+
+      const rstLayoutBtn = document.createElement("button");
+      rstLayoutBtn.className = "btn-secondary";
+      rstLayoutBtn.textContent = "Reset Layout Grid";
+      rstLayoutBtn.onclick = () => onReset("layout");
+
+      const rstAllBtn = document.createElement("button");
+      rstAllBtn.className = "btn-danger";
+      rstAllBtn.textContent = "Reset All to Defaults";
+      rstAllBtn.onclick = () => onReset("all");
+
+      const delDataBtn = document.createElement("button");
+      delDataBtn.className = "btn-danger";
+      delDataBtn.textContent = "Clear All Local Data";
+      delDataBtn.onclick = async () => {
+        if (confirm("Permanently wipe local storage, cached telemetry, and uploaded wallpapers?")) {
+          await clearLocalState();
+          await clearImages();
+          onDelete();
+        }
+      };
+
+      dangerRow.append(rstLayoutBtn, rstAllBtn, delDataBtn);
+      grid.append(dangerRow);
+
+      contentContainer.append(grid);
+    }
+  };
+
+  tabs.forEach((t) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `settings-tab-btn ${activeSettingsTab === t.id ? "active" : ""}`;
+    btn.textContent = t.label;
+    btn.addEventListener("click", () => {
+      activeSettingsTab = t.id;
+      nav.querySelectorAll(".settings-tab-btn").forEach((b) => b.className = "settings-tab-btn");
+      btn.className = "settings-tab-btn active";
+      renderTabContent();
     });
+    nav.append(btn);
   });
-  return panel;
+
+  panel.append(nav, contentContainer);
+  renderTabContent();
 }
-function range(value, min, max, step, change) {
-  const x = document.createElement("input");
-  x.type = "range";
-  x.min = min;
-  x.max = max;
-  x.step = step;
-  x.value = value;
-  x.addEventListener("input", () => change(Number(x.value)));
-  return x;
-}
-function select(values, value) {
-  const x = document.createElement("select");
-  values.forEach((v) => {
-    const o = document.createElement("option");
-    o.value = v;
-    o.textContent = v;
-    x.append(o);
+
+function createSliderRow(label, desc, value, min, max, step, unit, onChange) {
+  const row = document.createElement("div");
+  row.className = "setting-row";
+
+  const info = document.createElement("div");
+  info.className = "setting-info";
+  info.innerHTML = `
+    <span class="setting-label">${label}</span>
+    <span class="setting-desc">${desc}</span>
+  `;
+
+  const group = document.createElement("div");
+  group.className = "slider-group";
+
+  const input = document.createElement("input");
+  input.type = "range";
+  input.min = min;
+  input.max = max;
+  input.step = step;
+  input.value = value;
+
+  const valDisplay = document.createElement("span");
+  valDisplay.className = "slider-val";
+  valDisplay.textContent = `${value}${unit}`;
+
+  input.addEventListener("input", () => {
+    valDisplay.textContent = `${input.value}${unit}`;
+    onChange(Number(input.value));
   });
-  x.value = value;
-  return x;
+
+  group.append(input, valDisplay);
+  row.append(info, group);
+  return row;
+}
+
+function createToggle(checked, onChange) {
+  const label = document.createElement("label");
+  label.className = "toggle-switch";
+
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.checked = Boolean(checked);
+  input.addEventListener("change", () => onChange(input.checked));
+
+  const slider = document.createElement("span");
+  slider.className = "toggle-slider";
+
+  label.append(input, slider);
+  return label;
 }

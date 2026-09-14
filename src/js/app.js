@@ -5,35 +5,95 @@ import { applyBackground, cleanupBackgroundUrls } from "./background.js";
 import { initSearch } from "./search.js";
 import { announce, prefersReducedMotion } from "./accessibility.js";
 import { jolpica } from "./providers/jolpica.js";
-import { openF1 } from "./providers/openf1.js";
 import { renderShortcuts } from "./widgets/shortcuts.js";
 import { renderRaceWeekend } from "./widgets/race-weekend.js";
 import { renderStandings } from "./widgets/standings.js";
 import { renderStreams } from "./widgets/streams.js";
 import { renderSettings } from "./widgets/settings.js";
+import { countdown } from "./providers/provider-utils.js";
 import { DEFAULT_STATE } from "./state.js";
+import teams from "../data/teams.json" with { type: "json" };
+
 let state,
-  data = { schedule: [], drivers: [], provider: "offline" },
+  data = { schedule: [], drivers: [], constructors: [], provider: "offline" },
   streams = { results: [] };
+
 const grid = () => document.querySelector("#widget-grid");
-function cssTheme() {
+
+function applyCssTokens() {
   document.documentElement.style.setProperty(
-    "--panel-opacity",
-    state.theme.panelOpacity,
+    "--hypr-opacity",
+    state.theme.panelOpacity ?? 0.72,
   );
   document.documentElement.style.setProperty(
-    "--panel-blur",
-    `${state.theme.panelBlurPx}px`,
+    "--hypr-blur",
+    `${state.theme.panelBlurPx ?? 20}px`,
   );
   document.documentElement.style.setProperty(
-    "--panel-radius",
-    `${state.theme.panelRadiusPx}px`,
+    "--hypr-radius",
+    `${state.theme.panelRadiusPx ?? 16}px`,
   );
   document.documentElement.style.setProperty(
     "--page-accent",
-    state.theme.accentColor,
+    state.theme.accentColor || "#e10600",
   );
 }
+
+function initClock() {
+  const clockTime = document.querySelector("#clock-time");
+  const clockDate = document.querySelector("#clock-date");
+  if (!clockTime || !clockDate) return;
+
+  const update = () => {
+    const d = new Date();
+    const h = String(d.getHours()).padStart(2, "0");
+    const m = String(d.getMinutes()).padStart(2, "0");
+    clockTime.innerHTML = `${h}<span class="time-colon">:</span>${m}`;
+
+    const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    clockDate.textContent = `${days[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()}`;
+  };
+
+  update();
+  setInterval(update, 1000);
+}
+
+function initCountdownTicker() {
+  setInterval(() => {
+    const el = document.querySelector("#race-countdown-timer");
+    if (el && el.dataset.targetTime) {
+      el.textContent = countdown(el.dataset.targetTime);
+    }
+  }, 1000);
+}
+
+function renderTeamPills() {
+  const container = document.querySelector("#team-pill-bar");
+  if (!container) return;
+  container.replaceChildren();
+
+  teams.forEach((t) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `team-pill-btn ${state.theme.teamFilter === t.id ? "active" : ""}`;
+    btn.textContent = t.short || t.label;
+    btn.title = t.label;
+
+    btn.addEventListener("click", async () => {
+      state.theme.teamFilter = t.id;
+      state.theme.accentColor = t.accent;
+      await save();
+      applyCssTokens();
+      await applyBackground(state);
+      renderTeamPills();
+      rerender();
+    });
+
+    container.append(btn);
+  });
+}
+
 function rerender() {
   grid().replaceChildren(
     renderRaceWeekend(state, data),
@@ -48,55 +108,66 @@ function rerender() {
       rerender();
     }),
   );
+
   applyLayout(state);
   enableDragging(state, () => {
     save();
     applyLayout(state);
   });
-  cssTheme();
+  applyCssTokens();
 }
+
 async function save() {
   state = await saveState(state);
 }
+
 async function refreshData() {
-  announce("Refreshing F1 data…");
+  announce("Refreshing F1 telemetry…");
   const controller = new AbortController();
   try {
-    const [schedule, standings] = await Promise.all([
+    const [schedule, standings, constr] = await Promise.all([
       jolpica.getSchedule({ season: CONFIG.season, signal: controller.signal }),
-      jolpica.getStandings({
-        season: CONFIG.season,
-        signal: controller.signal,
-      }),
+      jolpica.getStandings({ season: CONFIG.season, signal: controller.signal }),
+      jolpica.getConstructorStandings({ season: CONFIG.season, signal: controller.signal }),
     ]);
-    data = { ...schedule, ...standings, provider: "jolpica" };
+
+    data = {
+      ...schedule,
+      ...standings,
+      ...constr,
+      provider: "jolpica",
+    };
+
     state.cache.schedule = { ...schedule, expiresAt: Date.now() + 1800000 };
     state.cache.standings = { ...standings, expiresAt: Date.now() + 1800000 };
+    state.cache.constructors = { ...constr, expiresAt: Date.now() + 1800000 };
+
     await save();
-    announce(
-      `F1 data updated from Jolpica at ${new Date().toLocaleTimeString()}.`,
-    );
+    announce(`F1 telemetry synced from Jolpica at ${new Date().toLocaleTimeString()}.`);
   } catch (error) {
-    const cachedSchedule = state.cache.schedule,
-      cachedStandings = state.cache.standings;
+    const cachedSchedule = state.cache.schedule;
+    const cachedStandings = state.cache.standings;
+    const cachedConstr = state.cache.constructors;
+
     data = {
       ...cachedSchedule,
       ...cachedStandings,
+      ...cachedConstr,
       provider: "jolpica",
       stale: true,
       error: error.message,
     };
-    announce("F1 data is unavailable; showing cached or offline state.");
+    announce("F1 telemetry is offline; showing cached data.");
   }
   rerender();
 }
+
 async function findStreams(session = "Race commentary") {
   const url = CONFIG.youtubeProxyUrl;
   if (!url || url.includes("==")) {
     streams = {
       results: [],
-      error:
-        "The optional proxy is not configured. Use the direct YouTube search link, or deploy the proxy first.",
+      error: "Proxy is optional. Direct search links above work instantly without credentials.",
     };
     rerender();
     return;
@@ -114,13 +185,7 @@ async function findStreams(session = "Race commentary") {
         language: state.preferences.language,
       }),
     });
-    if (!res.ok) {
-      throw new Error(
-        res.status === 429
-          ? "Search quota or rate limit reached. Try again later."
-          : `Proxy returned ${res.status}.`,
-      );
-    }
+    if (!res.ok) throw new Error(`Proxy error ${res.status}`);
     const payload = await res.json();
     streams = {
       results: Array.isArray(payload.results) ? payload.results : [],
@@ -130,13 +195,12 @@ async function findStreams(session = "Race commentary") {
     streams = {
       results: [],
       loading: false,
-      error: navigator.onLine
-        ? "Stream search failed. Try again later."
-        : "Stream search is unavailable offline.",
+      error: navigator.onLine ? "Search unavailable right now." : "Offline.",
     };
   }
   rerender();
 }
+
 function exportSettings() {
   const payload = {
     app: "f1-fans-new-tab",
@@ -145,25 +209,25 @@ function exportSettings() {
     settings: { theme: state.theme, preferences: state.preferences },
     layout: state.layout,
     shortcuts: state.shortcuts,
-    imageMetadata: [],
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json",
-    }),
-    url = URL.createObjectURL(blob),
-    a = document.createElement("a");
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
   a.href = url;
-  a.download = "f1-fans-settings.json";
+  a.download = "hypr-f1-settings.json";
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
+
 async function importSettings(file) {
   try {
     const parsed = JSON.parse(await file.text());
     if (parsed.app !== "f1-fans-new-tab" || !parsed.settings) {
-      throw new Error("This is not a supported F1 Fans settings export.");
+      throw new Error("This is not a valid F1 Fans configuration file.");
     }
-    if (confirm("Replace current settings with this import?")) {
+    if (confirm("Replace current settings and layout with this file?")) {
       state = {
         ...state,
         ...parsed.settings,
@@ -172,12 +236,15 @@ async function importSettings(file) {
       };
       await save();
       rerender();
-      announce("Settings imported.");
+      await applyBackground(state);
+      renderTeamPills();
+      announce("Configuration imported.");
     }
   } catch (e) {
-    announce(`Import rejected: ${e.message}`);
+    alert(`Import failed: ${e.message}`);
   }
 }
+
 async function reset(kind) {
   if (kind === "all") state = JSON.parse(JSON.stringify(DEFAULT_STATE));
   else {
@@ -187,14 +254,17 @@ async function reset(kind) {
   await save();
   rerender();
   await applyBackground(state);
-  announce(kind === "all" ? "Settings reset." : "Layout reset.");
+  renderTeamPills();
+  announce(kind === "all" ? "Settings reset to default." : "Layout grid reset.");
 }
+
 function openSettings() {
   renderSettings(state, {
     onChange: async () => {
       await save();
       rerender();
       await applyBackground(state);
+      renderTeamPills();
     },
     onReset: reset,
     onImport: importSettings,
@@ -202,40 +272,62 @@ function openSettings() {
     onDelete: async () => {
       state = await loadState();
       rerender();
-      announce("Local data deleted.");
+      announce("Local data wiped.");
     },
   });
+
   const panel = document.querySelector("#settings-panel");
+  const backdrop = document.querySelector("#settings-backdrop");
   panel.hidden = false;
-  document.querySelector("#settings-button").setAttribute(
-    "aria-expanded",
-    "true",
-  );
+  backdrop.hidden = false;
+  document.querySelector("#settings-button").setAttribute("aria-expanded", "true");
 }
+
 async function init() {
   state = await loadState();
   state.theme.reduceMotion = state.theme.reduceMotion || prefersReducedMotion();
-  initSearch();
-  document.querySelector("#settings-button").addEventListener(
-    "click",
-    openSettings,
-  );
-  document.querySelector("#refresh-button").addEventListener(
-    "click",
-    refreshData,
-  );
+
+  initClock();
+  initCountdownTicker();
+  initSearch(state.preferences.defaultSearchTarget || "google");
+  renderTeamPills();
+
+  document.querySelector("#settings-button").addEventListener("click", openSettings);
+  document.querySelector("#refresh-button").addEventListener("click", refreshData);
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const panel = document.querySelector("#settings-panel");
+      const backdrop = document.querySelector("#settings-backdrop");
+      if (panel && !panel.hidden) {
+        panel.hidden = true;
+        backdrop.hidden = true;
+        document.querySelector("#settings-button").setAttribute("aria-expanded", "false");
+      }
+    }
+  });
+
   window.addEventListener("beforeunload", cleanupBackgroundUrls);
+
   await applyBackground(state);
+  applyCssTokens();
   rerender();
+
   const cacheOk = state.cache.schedule && state.cache.standings &&
     state.cache.schedule.expiresAt > Date.now();
+
   if (cacheOk) {
     data = {
       ...state.cache.schedule,
       ...state.cache.standings,
+      ...state.cache.constructors,
       provider: "jolpica",
     };
-  } else if (navigator.onLine) refreshData();
-  else announce("Offline mode: showing the local shell and any saved data.");
+  } else if (navigator.onLine) {
+    refreshData();
+  } else {
+    announce("Offline mode: showing local telemetry shell.");
+  }
 }
+
 init().catch((error) => announce(`Startup error: ${error.message}`));
