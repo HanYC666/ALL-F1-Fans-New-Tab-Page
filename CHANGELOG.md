@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.3.1 - 2026-09-15 (Team Wallpaper Galleries & Background Shade Control)
+
+### Added
+- **Constructor Team Galleries**: Instead of a flat list with just one image per team, clicking any team card in settings now opens a dedicated gallery view for that constructor with preview artwork, image count badges, and an "Active Team" toggle.
+- **Multi-Image Uploads per Team**: Drag-and-drop or browse multiple images at once directly inside each team's gallery. Uploads are automatically tagged to that team in IndexedDB, and dynamic rotation (random, sequential, slideshow) cycles through all wallpapers for the active team.
+- **Default Wallpaper Deletion & Restore**: You can now delete/disable default built-in livery wallpapers with the hover `✕` button if you only want your own uploads. Added a `↺ Restore Default Wallpaper` button so you can bring them back whenever you want.
+- **Adjustable Background Shade Slider**: Added a Background Shade Strength slider (0% to 100%) in both Hyprland and Wallpaper settings tabs. You can drop it all the way to 0% to completely remove the dark/light gradient wash for raw, vivid wallpapers.
+
+### Fixed
+- **Background Not Changing on Team Switch**: Generic `circuit-dark.svg` was accidentally getting added to every team's pool, causing team switches in random mode to often roll the generic dark grid instead of team liveries. Team pools now strictly contain that team's wallpapers.
+- **Wallpaper Click Selection**: In random mode, clicking a specific wallpaper in settings would actively avoid picking the one you clicked. Added explicit wallpaper selection so clicking a card immediately displays that exact wallpaper on the dashboard.
+- **Team Pill Bar Background Update**: Switching teams via the Waybar top pill bar now clears stale background cache and immediately applies the new team's wallpaper.
+
+---
+
 ## 0.3.0 - 2026-09-14 (Bug Fixes, Light Mode & Extension Packaging)
 
 ### Added
