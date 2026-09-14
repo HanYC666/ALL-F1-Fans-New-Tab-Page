@@ -1,13 +1,13 @@
 [
-  { "id": "all", "label": "All teams", "accent": "#e10600" },
-  { "id": "red-bull", "label": "Red Bull Racing", "accent": "#1e41ff" },
-  { "id": "ferrari", "label": "Ferrari", "accent": "#e80020" },
-  { "id": "mclaren", "label": "McLaren", "accent": "#ff8700" },
-  { "id": "mercedes", "label": "Mercedes", "accent": "#00a19c" },
-  { "id": "aston-martin", "label": "Aston Martin", "accent": "#229971" },
-  { "id": "alpine", "label": "Alpine", "accent": "#2293d1" },
-  { "id": "williams", "label": "Williams", "accent": "#64c4ff" },
-  { "id": "haas", "label": "Haas", "accent": "#b6babd" },
-  { "id": "sauber", "label": "Audi", "accent": "#52e252" },
-  { "id": "rb", "label": "Racing Bulls", "accent": "#6692ff" }
+  { "id": "all", "label": "All Teams", "short": "ALL", "accent": "#e10600", "accentRgb": "225, 6, 0" },
+  { "id": "red-bull", "label": "Red Bull Racing", "short": "RBR", "accent": "#3671c6", "accentRgb": "54, 113, 198" },
+  { "id": "ferrari", "label": "Ferrari", "short": "FER", "accent": "#e8002d", "accentRgb": "232, 0, 45" },
+  { "id": "mclaren", "label": "McLaren", "short": "MCL", "accent": "#ff8000", "accentRgb": "255, 128, 0" },
+  { "id": "mercedes", "label": "Mercedes", "short": "MER", "accent": "#27f4d2", "accentRgb": "39, 244, 210" },
+  { "id": "aston-martin", "label": "Aston Martin", "short": "AMR", "accent": "#229971", "accentRgb": "34, 153, 113" },
+  { "id": "alpine", "label": "Alpine", "short": "ALP", "accent": "#0093cc", "accentRgb": "0, 147, 204" },
+  { "id": "williams", "label": "Williams", "short": "WIL", "accent": "#64c4ff", "accentRgb": "100, 196, 255" },
+  { "id": "haas", "label": "Haas", "short": "HAA", "accent": "#b6babd", "accentRgb": "182, 186, 189" },
+  { "id": "sauber", "label": "Stake Sauber", "short": "SAU", "accent": "#52e252", "accentRgb": "82, 226, 82" },
+  { "id": "rb", "label": "Racing Bulls", "short": "VRB", "accent": "#6692ff", "accentRgb": "102, 146, 255" }
 ]

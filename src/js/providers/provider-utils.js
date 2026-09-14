@@ -1,4 +1,5 @@
 import { CONFIG, isoNow } from "../config.js";
+
 export async function fetchJson(
   url,
   { signal, timeoutMs = CONFIG.providerTimeoutMs } = {},
@@ -19,10 +20,12 @@ export async function fetchJson(
     clearTimeout(timer);
   }
 }
+
 export function retryable(error) {
   return error?.name === "AbortError" ||
     /^(Provider returned (408|429|5\d\d))/.test(error?.message || "");
 }
+
 export async function withBackoff(task, { attempts = 2 } = {}) {
   let last;
   for (let i = 0; i < attempts; i++) {
@@ -36,6 +39,7 @@ export async function withBackoff(task, { attempts = 2 } = {}) {
   }
   throw last;
 }
+
 export function providerMeta(provider, extra = {}) {
   return {
     provider,
@@ -46,23 +50,42 @@ export function providerMeta(provider, extra = {}) {
     ...extra,
   };
 }
+
 export function formatDate(value, timezone = "local") {
   if (!value) return "TBC";
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return "TBC";
   return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
     timeZone: timezone === "utc" ? "UTC" : undefined,
   }).format(date);
 }
+
+export function formatTimeOnly(value, timezone = "local") {
+  if (!value) return "--:--";
+  const date = new Date(value);
+  if (Number.isNaN(date.valueOf())) return "--:--";
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: timezone === "utc" ? "UTC" : undefined,
+  }).format(date);
+}
+
 export function countdown(value) {
   const ms = new Date(value) - Date.now();
   if (!Number.isFinite(ms)) return "TBC";
   if (ms <= 0) return "in progress";
   const total = Math.floor(ms / 1000),
     d = Math.floor(total / 86400),
-    h = Math.floor(total % 86400 / 3600),
-    m = Math.floor(total % 3600 / 60);
-  return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`;
+    h = Math.floor((total % 86400) / 3600),
+    m = Math.floor((total % 3600) / 60),
+    s = Math.floor(total % 60);
+
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  return `${m}m ${s}s`;
 }

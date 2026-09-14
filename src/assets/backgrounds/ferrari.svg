@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <radialGradient id="feBg" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#3b0207"/>
+      <stop offset="50%" stop-color="#150103"/>
+      <stop offset="100%" stop-color="#050001"/>
+    </radialGradient>
+    <linearGradient id="feRed" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e8002d"/>
+      <stop offset="50%" stop-color="#ff2800"/>
+      <stop offset="100%" stop-color="#ffe600"/>
+    </linearGradient>
+    <pattern id="feCarbon" width="12" height="12" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="rgba(255,255,255,0.02)"/>
+      <rect x="6" y="6" width="6" height="6" fill="rgba(255,255,255,0.02)"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#feBg)"/>
+  <rect width="100%" height="100%" fill="url(#feCarbon)"/>
+  
+  <path d="M -100 450 C 600 350, 1100 700, 2020 500" fill="none" stroke="url(#feRed)" stroke-width="8" filter="drop-shadow(0 0 20px #e8002d)"/>
+  <path d="M -100 480 C 600 380, 1100 730, 2020 530" fill="none" stroke="#ffe600" stroke-width="2" opacity="0.9"/>
+  <path d="M -100 420 C 600 320, 1100 670, 2020 470" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+  
+  <text x="140" y="960" fill="rgba(232,0,45,0.08)" font-family="system-ui, sans-serif" font-size="140" font-weight="900" letter-spacing="14">FERRARI</text>
+  <text x="150" y="1000" fill="#e8002d" font-family="monospace" font-size="16" letter-spacing="4">SCUDERIA FERRARI HP // MARANELLO</text>
+</svg>

@@ -1,4 +1,5 @@
 import { clamp, CONFIG, safeHex } from "./config.js";
+
 export const DEFAULT_STATE = {
   schemaVersion: CONFIG.schemaVersion,
   theme: {
@@ -6,11 +7,13 @@ export const DEFAULT_STATE = {
     backgroundMode: "random-new-tab",
     backgroundIntervalSeconds: 30,
     backgroundFit: "cover",
-    overlayOpacity: .42,
+    overlayOpacity: 0.45,
     accentColor: "#e10600",
-    panelOpacity: .72,
-    panelBlurPx: 18,
-    panelRadiusPx: 18,
+    panelOpacity: 0.72,
+    panelBlurPx: 20,
+    panelRadiusPx: 16,
+    gridGapPx: 16,
+    borderGlow: true,
     reduceMotion: false,
   },
   layout: {
@@ -22,40 +25,81 @@ export const DEFAULT_STATE = {
         x: 1,
         y: 1,
         w: 4,
-        h: 3,
-        opacity: .78,
-        blurPx: 18,
+        h: 5,
+        opacity: 0.78,
+        blurPx: 20,
       },
       standings: {
         visible: true,
-        x: 1,
-        y: 5,
-        w: 5,
-        h: 4,
-        opacity: .78,
-        blurPx: 18,
+        x: 5,
+        y: 1,
+        w: 4,
+        h: 5,
+        opacity: 0.78,
+        blurPx: 20,
       },
       streams: {
         visible: true,
-        x: 8,
-        y: 5,
+        x: 9,
+        y: 1,
         w: 4,
-        h: 4,
-        opacity: .78,
-        blurPx: 18,
+        h: 5,
+        opacity: 0.78,
+        blurPx: 20,
       },
       shortcuts: {
         visible: true,
-        x: 8,
-        y: 1,
-        w: 4,
-        h: 3,
-        opacity: .78,
-        blurPx: 18,
+        x: 1,
+        y: 6,
+        w: 12,
+        h: 2,
+        opacity: 0.78,
+        blurPx: 20,
       },
     },
   },
-  shortcuts: [],
+  shortcuts: [
+    {
+      id: "sc-f1-official",
+      title: "Formula 1",
+      url: "https://www.formula1.com/",
+      position: 0,
+      iconMode: "favicon",
+      createdAt: Date.now(),
+    },
+    {
+      id: "sc-f1-tv",
+      title: "F1 TV",
+      url: "https://f1tv.formula1.com/",
+      position: 1,
+      iconMode: "favicon",
+      createdAt: Date.now(),
+    },
+    {
+      id: "sc-reddit-f1",
+      title: "r/formula1",
+      url: "https://www.reddit.com/r/formula1/",
+      position: 2,
+      iconMode: "favicon",
+      createdAt: Date.now(),
+    },
+    {
+      id: "sc-youtube-f1",
+      title: "F1 YouTube",
+      url: "https://www.youtube.com/@Formula1",
+      position: 3,
+      iconMode: "favicon",
+      createdAt: Date.now(),
+    },
+    {
+      id: "sc-motorsport",
+      title: "Motorsport",
+      url: "https://www.motorsport.com/f1/",
+      position: 4,
+      iconMode: "favicon",
+      createdAt: Date.now(),
+    },
+  ],
   preferences: {
     defaultSearchTarget: "google",
     openLinksInNewTab: true,
@@ -64,7 +108,9 @@ export const DEFAULT_STATE = {
   },
   cache: {},
 };
+
 const copy = (value) => JSON.parse(JSON.stringify(value));
+
 export function sanitizeShortcut(input) {
   const raw = String(input?.url || "").trim();
   let url;
@@ -86,6 +132,7 @@ export function sanitizeShortcut(input) {
     createdAt: Number(input.createdAt) || Date.now(),
   };
 }
+
 export function sanitizeState(input = {}) {
   const s = copy(DEFAULT_STATE);
   if (!input || typeof input !== "object") return s;
@@ -94,12 +141,12 @@ export function sanitizeState(input = {}) {
   Object.assign(s.theme, t);
   s.theme.overlayOpacity = clamp(
     t.overlayOpacity ?? DEFAULT_STATE.theme.overlayOpacity,
-    .2,
+    0.2,
     1,
   );
   s.theme.panelOpacity = clamp(
     t.panelOpacity ?? DEFAULT_STATE.theme.panelOpacity,
-    .2,
+    0.2,
     1,
   );
   s.theme.panelBlurPx = clamp(
@@ -109,6 +156,11 @@ export function sanitizeState(input = {}) {
   );
   s.theme.panelRadiusPx = clamp(
     t.panelRadiusPx ?? DEFAULT_STATE.theme.panelRadiusPx,
+    0,
+    40,
+  );
+  s.theme.gridGapPx = clamp(
+    t.gridGapPx ?? DEFAULT_STATE.theme.gridGapPx,
     0,
     40,
   );
@@ -139,17 +191,17 @@ export function sanitizeState(input = {}) {
       raw.y = clamp(v.y, 1, 20);
       raw.w = clamp(v.w, 2, 12);
       raw.h = clamp(v.h, 2, 8);
-      raw.opacity = clamp(v.opacity ?? raw.opacity, .2, 1);
+      raw.opacity = clamp(v.opacity ?? raw.opacity, 0.2, 1);
       raw.blurPx = clamp(v.blurPx ?? raw.blurPx, 0, 40);
       if (raw.x + raw.w > 13) raw.x = 13 - raw.w;
     }
   }
-  s.shortcuts = (Array.isArray(input.shortcuts) ? input.shortcuts : []).map(
-    sanitizeShortcut,
-  ).filter(Boolean).sort((a, b) => a.position - b.position).map((x, i) => ({
-    ...x,
-    position: i,
-  }));
+  if (Array.isArray(input.shortcuts)) {
+    s.shortcuts = input.shortcuts.map(sanitizeShortcut).filter(Boolean).sort((a, b) => a.position - b.position).map((x, i) => ({
+      ...x,
+      position: i,
+    }));
+  }
   s.preferences = { ...s.preferences, ...(input.preferences || {}) };
   if (!["local", "utc"].includes(s.preferences.timezone)) {
     s.preferences.timezone = "local";
@@ -157,6 +209,7 @@ export function sanitizeState(input = {}) {
   s.cache = input.cache && typeof input.cache === "object" ? input.cache : {};
   return s;
 }
+
 export function migrateState(input) {
   return sanitizeState(input);
 }

@@ -1,14 +1,51 @@
 :root {
-  --page-accent: #e10600;
-  --panel-opacity: .72;
-  --panel-blur: 18px;
-  --panel-radius: 18px;
+  /* F1 Team Livery Accents */
+  --team-all: #e10600;
+  --team-red-bull: #3671c6;
+  --team-ferrari: #e8002d;
+  --team-mclaren: #ff8000;
+  --team-mercedes: #27f4d2;
+  --team-aston-martin: #229971;
+  --team-alpine: #0093cc;
+  --team-williams: #64c4ff;
+  --team-haas: #b6babd;
+  --team-sauber: #52e252;
+  --team-rb: #6692ff;
+
+  /* Active Theme Variables (Dynamic) */
+  --page-accent: var(--team-all);
+  --page-accent-rgb: 225, 6, 0;
+  --page-accent-glow: rgba(var(--page-accent-rgb), 0.35);
+
+  /* Hyprland Glass & Tiling Controls */
+  --hypr-opacity: 0.75;
+  --hypr-blur: 20px;
+  --hypr-radius: 16px;
+  --hypr-gap: 16px;
+  --hypr-border-width: 1px;
+  --hypr-border-color: rgba(255, 255, 255, 0.12);
+  --hypr-active-border: linear-gradient(135deg, var(--page-accent), rgba(255, 255, 255, 0.4));
+  --hypr-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+  /* Panel Surface & Text */
+  --panel-bg-rgb: 10, 14, 24;
+  --panel-bg: rgba(var(--panel-bg-rgb), var(--hypr-opacity));
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --panel-bg: 10 15 25;
-  --panel-border: rgb(255 255 255 / 18%);
-  --shadow: 0 16px 48px rgb(0 0 0 / 25%);
-  --gap: 16px;
-  --focus: 0 0 0 3px rgb(255 255 255 / 35%),0 0 0 5px var(--page-accent);
+  --text-muted: #8492a6;
+  --text-accent: var(--page-accent);
+
+  /* Badges & Status */
+  --status-green: #10b981;
+  --status-yellow: #f59e0b;
+  --status-red: #ef4444;
+
+  /* Typography */
+  --font-main: "Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Fira Code", "JetBrains Mono", "SF Mono", Consolas, monospace;
+
+  /* Accessibility & Transitions */
+  --focus-ring: 0 0 0 2px rgba(10, 14, 24, 0.9), 0 0 0 4px var(--page-accent);
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <radialGradient id="vcarbBg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#0a1d4a"/>
+      <stop offset="60%" stop-color="#030a1c"/>
+      <stop offset="100%" stop-color="#010208"/>
+    </radialGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#vcarbBg)"/>
+  <path d="M 0 500 C 600 700, 1300 300, 1920 600" fill="none" stroke="#6692ff" stroke-width="7" filter="drop-shadow(0 0 16px #6692ff)"/>
+  <path d="M 0 520 C 600 720, 1300 320, 1920 620" fill="none" stroke="#e10600" stroke-width="3" opacity="0.9"/>
+  <text x="140" y="960" fill="rgba(102,146,255,0.08)" font-family="system-ui, sans-serif" font-size="140" font-weight="900" letter-spacing="14">RACING BULLS</text>
+  <text x="150" y="1000" fill="#6692ff" font-family="monospace" font-size="16" letter-spacing="4">VISA CASH APP RB FORMULA ONE TEAM // FAENZA</text>
+</svg>

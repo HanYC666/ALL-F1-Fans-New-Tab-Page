@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#141c2e"/>
+      <stop offset="60%" stop-color="#080c16"/>
+      <stop offset="100%" stop-color="#03050a"/>
+    </radialGradient>
+    <linearGradient id="gridGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e10600" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#ff8000" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#3671c6" stop-opacity="0.25"/>
+    </linearGradient>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bg)"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+  
+  <!-- Speed lines and racing circuit curve -->
+  <path d="M -100 800 C 400 750, 800 950, 1400 650 S 2100 400, 2100 400" fill="none" stroke="url(#gridGlow)" stroke-width="4" filter="drop-shadow(0 0 15px #e10600)"/>
+  <path d="M -100 820 C 400 770, 800 970, 1400 670 S 2100 420, 2100 420" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+  <path d="M -100 780 C 400 730, 800 930, 1400 630 S 2100 380, 2100 380" fill="none" stroke="rgba(225,6,0,0.4)" stroke-width="2"/>
+  
+  <!-- Telemetry dots and apex markings -->
+  <circle cx="800" cy="950" r="6" fill="#e10600" filter="drop-shadow(0 0 8px #e10600)"/>
+  <circle cx="1400" cy="650" r="6" fill="#ff8000" filter="drop-shadow(0 0 8px #ff8000)"/>
+  <text x="820" y="955" fill="rgba(255,255,255,0.3)" font-family="monospace" font-size="12" letter-spacing="2">SECTOR 2 APEX // SPEED: 298 KM/H</text>
+  <text x="1420" y="655" fill="rgba(255,255,255,0.3)" font-family="monospace" font-size="12" letter-spacing="2">DRS DETECTION POINT // SPEED: 334 KM/H</text>
+  
+  <text x="100" y="1000" fill="rgba(255,255,255,0.06)" font-family="system-ui, sans-serif" font-size="120" font-weight="900" letter-spacing="10">FORMULA 1</text>
+</svg>
