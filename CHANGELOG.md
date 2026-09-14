@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.3.0 - 2026-09-14 (Bug Fixes, Light Mode & Extension Packaging)
+
+### Added
+- **Racing Light Mode**: Full light theme with proper CSS variable propagation across every widget, navbar, settings panel, and status elements. No more hardcoded `rgba(255,255,255,...)` anywhere - everything uses tokens now so it actually works.
+- **Theme Quick-Toggle Button**: Added ☀️/🌙 icon button to the Waybar for one-click light/dark switching without opening settings at all.
+- **Extension Pack Script**: New `scripts/pack.mjs` builds and zips `dist/` into `f1-fans-new-tab.zip` so you can drag-drop install it in Chrome without having to load unpacked every time.
+
+### Changed
+- Live search button in the Streams widget now searches for the **current or most recent Grand Prix** automatically (within 12-hour lights-out window counts as current), no more hardcoded Australian GP.
+- Streams footer now shows the active GP name and "Direct YouTube search · 0 API keys" instead of the old blank placeholder text.
+- Removed the useless "Check" button from the streams session selector bar — it didn't do anything useful anyway.
+- Settings panel emoji cleanup — reduced to a single ⚙ on the title only, everything else is text labels now.
+
+### Fixed
+- **Settings not updating the UI** — the big one. The `onChange` callback was only calling `applyCssTokens()` but never `rerender()`, so sliders and dropdowns would save to state but widgets would sit there looking exactly the same. Added `rerender()` to the callback, now everything actually reflects changes instantly.
+- **Settings state race condition** — storage reads/writes are now properly sequential so rapid slider moves don't write stale state on top of each other.
+- **Widget move arrows not working** — layout move functions were broken, fixed the grid coordinate math.
+- **Live track status not showing on new tab** — status was only updating after manually hitting the refresh button. Now it loads from cache immediately on startup.
+- Fixed manifest permissions and updated `manifest.json` for proper Chrome Web Store compatibility.
+
+---
+
 ## 0.2.0 - 2026-09-14 (Hyprland UI Overhaul & Full Telemetry)
 
 ### Added
