@@ -1,72 +1,42 @@
 # Changelog
-Format:
-- ##Date (Optional: commit number e.g. 2nd commit if there's multiple commits on the same day)
-- ###Added
-- ###Changed (if applicable)
-- ###Fixed (if applicable)
-- ###Removed (if applicable)
+
+All notable changes to this project will be documented in this file.
+
+## 0.2.0 - 2026-09-14 (Hyprland UI Overhaul & Full Telemetry)
+
+### Added
+- **Hyprland on Arch Design System**: Complete visual rework featuring frosted glass acrylic widgets (`backdrop-filter: blur(20px)`), customizable tile opacity (20%-100%), dynamic team livery active glowing borders, and customizable gap/rounding.
+- **Waybar Top Status Bar**: Live digital clock with blinking colon, live Track Flag status indicator (🟢 Green Flag / 🟡 Safety Car / 🔴 Red Flag) with pulsing dot, quick team livery pill switcher, and search focus hotkey (`/`).
+- **Complete Grand Prix Timetable**: Full weekend schedule view for FP1, FP2, FP3, Sprint Shootout, Sprint, Qualifying, and Race with live countdown timers and local/UTC timezone formatting.
+- **Championship Standings Hub**: Interactive dual tabs for both **Driver Standings** and **Constructor Standings** with official team color bars, driver codes, and points tally.
+- **YouTube Commentary Discovery Engine**: Session selector and 1-click legal live commentary search builder with curated stream channels (P1 with Matt & Tommy, The Race, Sky Sports F1, Autosport, F1 Live).
+- **Curated SVG Wallpapers for All 10 Teams**: Handcrafted vector wallpapers for Red Bull, Ferrari, McLaren, Mercedes, Aston Martin, Alpine, Williams, Haas, Stake Sauber, Racing Bulls, and Carbon Grid.
+- **Dynamic Wallpaper Engine**: Automatic slideshow timer, random/sequential new tab rotation, and local drag-and-drop image uploads stored in IndexedDB.
+- **Speed Dial Shortcuts**: Translucent glass shortcut tiles with high-res Google favicon resolution and instant add/remove.
+- **Web App Mode**: Dual support for unpacked Chrome Extension and standalone deployment on GitHub Pages / Vercel with `localStorage` persistence.
+- **Development Log**: Created `DEVLOG.md` documenting the design journey and architecture decisions.
+
+### Changed
+- Migrated legacy basic cards into modular Hyprland acrylic widgets.
+- Upgraded Jolpica and OpenF1 adapters to fetch full session timetables and constructor points.
+- Upgraded settings drawer into a tabbed floating control center modal with live preview sliders.
+
+### Fixed
+- Fixed layout coordinate clamping and responsive column stacking on tablets/phones.
+- Enhanced storage fallback to work seamlessly across both Chrome extension environment and standard web browsers.
+
+---
 
 ## 0.1.0 - 2026-08-21
 
 ### Added
+- Manifest V3 Chrome New Tab extension with Google search, basic F1 dashboard widgets, settings, icons, and storage-only permissions.
+- Local state persistence, migration, reset controls, and validated JSON export/import.
+- Optional YouTube proxy with structured request validation and server-side credentials.
+- Unit tests, build tooling, and source validation.
 
-- Manifest V3 Chrome New Tab extension with Google search, F1 dashboard widgets, settings, icons, and storage-only permissions.
-- Responsive glass-style layout with theme controls, widget visibility, density, opacity, blur, and keyboard-accessible movement.
-- Race Weekend and Driver Standings widgets using Jolpica data, with OpenF1 session support, source attribution, loading states, caching, stale fallbacks, and offline handling.
-- Local state persistence, migration, reset controls, validated JSON export/import, shortcut management, and safe external URL handling.
-- Built-in background metadata, random/sequential/slideshow modes, local image uploads, IndexedDB image storage, validation, resizing, thumbnails, and cleanup.
-- Optional YouTube proxy with structured request validation, bounded results, caching, rate limiting, quota handling, channel allowlist annotations, and server-side credentials.
-- Direct no-key YouTube search links for use when the optional proxy is not deployed.
-- Privacy, provider, licensing, server, release-readiness, and manual Chrome testing documentation.
-- Unit tests, build tooling, source validation, and public-repository-safe ignore rules.
+---
 
-### Changed
+## 0.0.1 - 2026-08-16
 
-- Reworked the project from planning and research notes into the current vanilla JavaScript extension implementation.
-- Documented the distinction between direct browser YouTube searches and official API-backed proxy results.
-
-### Fixed
-
-- Unsafe shortcut schemes, invalid imported state, oversized or invalid images, broad permissions, exposed client secrets, unsafe dynamic code, and generated source maps are rejected or prevented by the implementation and checks.
-
------
-
-## 0.0.2 — 2026-08-18
-
-This is the first working version of the extension. The repository started as notes and a plan; this release contains the actual extension source, build scripts, and tests.
-
-### Added
-
-- Manifest V3 New Tab page with Google search.
-- Glass-style responsive dashboard and settings panel.
-- Race Weekend and Driver Standings widgets.
-- Extension-owned pinned shortcuts with URL checks.
-- Jolpica schedule, standings, and results adapter.
-- OpenF1 session adapter for future session work.
-- Local settings, layout, shortcut, cache, and background persistence.
-- Background rotation and local image upload handling.
-- Keyboard-friendly widget movement and reduced-motion styles.
-- Optional YouTube proxy for structured search results.
-- Direct YouTube search link that works without an API key.
-- Unit tests, build checks, validation checks, and a manual Chrome checklist.
-
-### Security and reliability changes
-
-- Unsafe shortcut schemes are rejected.
-- Imported settings are checked before they are saved.
-- Provider requests have timeouts, retries, and cached fallback data.
-- The extension asks only for the `storage` permission.
-- The YouTube API key is kept out of the extension bundle.
-
-### Still to do before a public release
-
-- Fill in the privacy policy, support, publisher, provider, and image-licence details.
-- Decide whether to deploy the optional YouTube proxy.
-- Test the built extension in a clean Chrome profile.
-
------
-
-## 2026-08-16
-
-- Registered the Chrome Web Store developer account.
-- Recorded the $5 USD registration cost.
+- Initial project scaffolding and research.
