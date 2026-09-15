@@ -42,7 +42,7 @@ Every time you open a new tab you get a full F1 dashboard instead of the default
 **Settings (Hyprland Control Center)**
 - Sliders for glass opacity, blur intensity, corner rounding, and grid gap — all update live
 - Team accent color picker
-- Wallpaper gallery with all 10 team SVGs, plus drag-and-drop custom image upload (stored locally in IndexedDB)
+- Wallpaper gallery with all 10 team wallpapers, plus drag-and-drop custom image upload (stored locally in IndexedDB)
 - Light and dark mode
 
 ---
@@ -53,7 +53,7 @@ Every time you open a new tab you get a full F1 dashboard instead of the default
 src/
 ├── manifest.json              # Chrome Manifest V3
 ├── newtab.html                # Main page
-├── assets/backgrounds/        # SVG wallpapers for all 10 teams
+├── assets/backgrounds/        # HD wallpapers for all 10 teams
 ├── data/
 │   ├── teams.json             # Team colors and metadata
 │   ├── built-in-backgrounds.json

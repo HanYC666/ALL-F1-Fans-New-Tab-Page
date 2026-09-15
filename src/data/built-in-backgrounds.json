@@ -2,7 +2,7 @@
   {
     "id": "circuit-dark",
     "team": "all",
-    "src": "assets/backgrounds/circuit-dark.svg",
+    "src": "assets/backgrounds/circuit-dark.png",
     "alt": "Cyberpunk dark telemetry racing grid",
     "credit": "Original vector artwork",
     "sourceUrl": "",
@@ -12,7 +12,7 @@
   {
     "id": "red-bull",
     "team": "red-bull",
-    "src": "assets/backgrounds/red-bull.svg",
+    "src": "assets/backgrounds/red-bull.png",
     "alt": "Oracle Red Bull Racing livery wallpaper",
     "credit": "Original vector artwork",
     "sourceUrl": "",
@@ -22,7 +22,7 @@
   {
     "id": "ferrari",
     "team": "ferrari",
-    "src": "assets/backgrounds/ferrari.svg",
+    "src": "assets/backgrounds/ferrari.png",
     "alt": "Scuderia Ferrari Rosso Corsa wallpaper",
     "credit": "Original vector artwork",
     "sourceUrl": "",
@@ -32,7 +32,7 @@
   {
     "id": "mclaren",
     "team": "mclaren",
-    "src": "assets/backgrounds/mclaren.svg",
+    "src": "assets/backgrounds/mclaren.png",
     "alt": "McLaren Papaya speedline wallpaper",
     "credit": "Original vector artwork",
     "sourceUrl": "",
@@ -42,7 +42,7 @@
   {
     "id": "mercedes",
     "team": "mercedes",
-    "src": "assets/backgrounds/mercedes.svg",
+    "src": "assets/backgrounds/mercedes.png",
     "alt": "Mercedes-AMG Petronas teal glow wallpaper",
     "credit": "Original vector artwork",
     "sourceUrl": "",
@@ -52,7 +52,7 @@
   {
     "id": "aston-martin",
     "team": "aston-martin",
-    "src": "assets/backgrounds/aston-martin.svg",
+    "src": "assets/backgrounds/aston-martin.png",
     "alt": "Aston Martin British racing green wallpaper",
     "credit": "Original vector artwork",
     "sourceUrl": "",
@@ -62,7 +62,7 @@
   {
     "id": "alpine",
     "team": "alpine",
-    "src": "assets/backgrounds/alpine.svg",
+    "src": "assets/backgrounds/alpine.png",
     "alt": "Alpine BWT blue and pink wallpaper",
     "credit": "Original vector artwork",
     "sourceUrl": "",
@@ -72,7 +72,7 @@
   {
     "id": "williams",
     "team": "williams",
-    "src": "assets/backgrounds/williams.svg",
+    "src": "assets/backgrounds/williams.png",
     "alt": "Williams Racing heritage blue wallpaper",
     "credit": "Original vector artwork",
     "sourceUrl": "",
@@ -82,7 +82,7 @@
   {
     "id": "haas",
     "team": "haas",
-    "src": "assets/backgrounds/haas.svg",
+    "src": "assets/backgrounds/haas.png",
     "alt": "MoneyGram Haas F1 speed wallpaper",
     "credit": "Original vector artwork",
     "sourceUrl": "",
@@ -92,7 +92,7 @@
   {
     "id": "sauber",
     "team": "sauber",
-    "src": "assets/backgrounds/sauber.svg",
+    "src": "assets/backgrounds/sauber.png",
     "alt": "Stake F1 Team neon green wallpaper",
     "credit": "Original vector artwork",
     "sourceUrl": "",
@@ -102,7 +102,7 @@
   {
     "id": "rb",
     "team": "rb",
-    "src": "assets/backgrounds/rb.svg",
+    "src": "assets/backgrounds/rb.png",
     "alt": "Visa Cash App RB dynamic blue wallpaper",
     "credit": "Original vector artwork",
     "sourceUrl": "",
