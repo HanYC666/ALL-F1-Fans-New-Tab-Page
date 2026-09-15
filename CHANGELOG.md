@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.2.1 - 2026-09-16 (Team Wallpaper Galleries, PNG Icons & Background Shade Control)
+## 0.3.1 - 2026-09-16 (Team Wallpaper Galleries, PNG Icons & Background Shade Control)
 
 ### Added
 - **Constructor Team Galleries**: Instead of a flat list with just one image per team, clicking any team card in settings now opens a dedicated gallery view for that constructor with preview artwork, image count badges, and an "Active Team" toggle.
