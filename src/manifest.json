@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "HYPR//F1 Command Center & New Tab",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Hyprland-inspired motorsport command center and F1 dashboard for Chrome's New Tab page.",
   "chrome_url_overrides": { "newtab": "newtab.html" },
   "permissions": ["storage"],
